@@ -1,10 +1,10 @@
-// NFL Pinpoint Challenge — shared engine (list math, renderer, transport)
+// NFL Pinpoint Challenge \u2014 shared engine (list math, renderer, transport)
 // Used by index.html (control) and display.html (OBS).
 window.PP = (() => {
   const HUB_DEFAULT = 'https://jomboy-relay.jomboymedia.workers.dev';
   const W = 1920, H = 1080;
 
-  // ── Stats (same definitions as jomboytrivia.com Football Pinpoint) ──────────
+  // \u2500\u2500 Stats (same definitions as jomboytrivia.com Football Pinpoint) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   const IDX = { PID:0, TID:1, YEAR:2, POS:3, G:4, CMP:5, PASS_ATT:6, PASS_YDS:7, PASS_TD:8, INT:9,
     CAR:10, RUSH_YDS:11, RUSH_TD:12, REC:13, TGT:14, REC_YDS:15, REC_TD:16, KR_YDS:17, KR_TD:18, PR_YDS:19, PR_TD:20, FL:21, TWOPT:22 };
   const STATS = {
@@ -45,7 +45,7 @@ window.PP = (() => {
     }
   }
 
-  const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
     .replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
   const normHy = s => norm((s || '').replace(/-/g, ' '));
   const lastName = s => { const p = norm(s).split(' ').filter(x => !/^(jr|sr|ii|iii|iv|v)$/.test(x)); return p[p.length - 1] || ''; };
@@ -101,7 +101,7 @@ window.PP = (() => {
     if (yMin === yMax) return 'In ' + yMin;
     if (yMax >= last) return 'Since ' + yMin;
     if (yMin % 10 === 0 && yMax === yMin + 9) return 'The ' + yMin + 's';
-    return yMin + '–' + yMax;
+    return yMin + '\u2013' + yMax;
   }
 
   const fmtVal = v => {
@@ -125,10 +125,10 @@ window.PP = (() => {
   ];
   const PLAYER_COLORS = ['#f7a35c', '#f45fb5', '#f6e04a', '#5cc8ff', '#7be07b'];
 
-  // card x/y/size · scoreboard x/y/size · strike boxes centre-x/y/size · board size
+  // card x/y/size \u00b7 scoreboard x/y/size \u00b7 strike boxes centre-x/y/size \u00b7 board size
   const LAY_DEFAULT = { cx: 30, cy: 12, cs: 100, sx: 805, sy: 615, ss: 100, kx: 1350, ky: 819, ks: 100, bs: 100 };
 
-  // ── Renderer ────────────────────────────────────────────────────────────────
+  // \u2500\u2500 Renderer \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   // state = { seq, show:{card,score,strikes,board,title,turn}, card, players[], turn, maxStrikes, title, sub, size, board, layout, theme }
   function createStage(host) {
     host.innerHTML = `
@@ -147,27 +147,52 @@ window.PP = (() => {
     let lastCardKey = '', lastScores = {}, lastStrikes = {}, lastBoardKey = '';
     let latest = null, waitingKey = '';
     const loaded = new Set();
-    // Load + decode a photo before the card is drawn, so card and photo always arrive together.
-    const preload = src => new Promise(res => {
+    const frames = new Map();
+    const failed = new Set();   // photos that would not load: draw the silhouette, never a broken-image icon   // src -> {x,y,w,h} placement for cutouts, measured from the image's own pixels
+    // Load a photo before the card is drawn, so card and photo always arrive together.
+    // Cutouts are measured on the way in so every player is framed the same: top of the head just
+    // under the top of the oval, head centred left-right, shoulders filling the bottom.
+    const preload = (src, cutout) => new Promise(res => {
       const im = new Image(); let done = false;
       const fin = ok => { if (!done) { done = true; clearTimeout(t); res(ok); } };
       const t = setTimeout(() => fin(false), 4000);
-      im.onload = () => fin(true);   // (img.decode() can hang in some Chromium builds — don't use it)
-      im.onerror = () => fin(false);
+      if (cutout) im.crossOrigin = 'anonymous';
+      im.onload = () => { if (cutout) { try { const f = frameCutout(im); if (f) frames.set(src, f); } catch {} } fin(true); };  // (no img.decode(): it can hang)
+      im.onerror = () => { if (cutout && im.crossOrigin) { im.onerror = () => fin(false); im.removeAttribute('crossorigin'); im.src = src + ''; } else fin(false); };
       im.src = src;
     });
+    function frameCutout(im) {
+      const W0 = 120, H0 = Math.max(1, Math.round(W0 * im.naturalHeight / im.naturalWidth));
+      const cv = document.createElement('canvas'); cv.width = W0; cv.height = H0;
+      const cx = cv.getContext('2d'); cx.drawImage(im, 0, 0, W0, H0);
+      const d = cx.getImageData(0, 0, W0, H0).data;
+      const solid = (x, y) => d[(y * W0 + x) * 4 + 3] > 60;
+      let top = -1;
+      for (let y = 0; y < H0 && top < 0; y++) { let n = 0; for (let x = 0; x < W0; x++) if (solid(x, y)) n++; if (n >= 3) top = y; }
+      if (top < 0) return null;
+      // head centre = middle of the opaque span a little below the crown
+      let sx = 0, sn = 0;
+      for (let y = top; y < Math.min(H0, top + Math.round(H0 * 0.18)); y++) for (let x = 0; x < W0; x++) if (solid(x, y)) { sx += x; sn++; }
+      const headX = sn ? sx / sn / W0 : 0.5;
+      const topF = top / H0;
+      const HEAD_TOP = 92, BOTTOM = 845;                       // card units (oval spans y 52\u2013828)
+      let h = (BOTTOM - HEAD_TOP) / Math.max(0.35, 1 - topF);
+      h = Math.min(h, 1250);
+      const w = h * im.naturalWidth / im.naturalHeight;
+      return { x: Math.round(370 - headX * w), y: Math.round(HEAD_TOP - topF * h), w: Math.round(w), h: Math.round(h) };
+    }
 
     function renderCard(S) {
       const c = S.card;
       const on = !!(S.show && S.show.card && c && !(S.show.board && S.board));
       if (!c) { el.cardwrap.classList.toggle('on', false); return; }
       const key = c.id + '|' + (c.img || '');
-      if (key !== lastCardKey && c.img && !loaded.has(c.img)) {
+      if (key !== lastCardKey && c.img && !loaded.has(c.img + (c.photo ? '' : '#c'))) {
         // hold the new card off screen until its photo is ready
         el.cardwrap.classList.remove('on');
         if (waitingKey !== key) {
           waitingKey = key;
-          preload(c.img).then(() => { loaded.add(c.img); if (waitingKey === key) { waitingKey = ''; if (latest) renderCard(latest); } });
+          preload(c.img, !c.photo).then(ok => { if (!ok) failed.add(c.img); loaded.add(c.img + (c.photo ? '' : '#c')); if (waitingKey === key) { waitingKey = ''; if (latest) renderCard(latest); } });
         }
         return;
       }
@@ -177,13 +202,15 @@ window.PP = (() => {
       const th = CARD_THEMES[(c.theme || 0) % CARD_THEMES.length];
       const miss = c.kind === 'miss';
       const nameSize = c.name.length > 20 ? 40 : c.name.length > 16 ? 46 : 54;
-      const fbTop = miss ? (c.rank ? '#' + c.rank : '✕') : '#' + (c.dr || c.rank);
+      const fbTop = miss ? (c.rank ? '#' + c.rank : '\u2715') : '#' + (c.dr || c.rank);
       const fbSub = miss ? (c.rank ? 'Off the list' : 'Not on list') : (S.sub || '');
       const fbSize = fbTop.length > 4 ? 56 : fbTop.length > 3 ? 64 : 74;
-      const img = !c.img ? '' : c.photo
+      const src = c.img && !failed.has(c.img) ? c.img : '';
+      const img = !src ? '' : c.photo
         ? `<image href="${esc(c.img)}" x="55" y="50" width="630" height="780" preserveAspectRatio="xMidYMin slice" clip-path="url(#ppOval${c.id})" ${miss ? 'filter="url(#ppGray)"' : ''}/>`
-        : `<image href="${esc(c.img)}" x="${c.espn ? -90 : -70}" y="${c.espn ? 228 : 70}" width="${c.espn ? 920 : 880}" height="${c.espn ? 668 : 880}" preserveAspectRatio="xMidYMax meet" clip-path="url(#ppOval${c.id})" ${miss ? 'filter="url(#ppGray)"' : ''}/>`;
-      const silhouette = !c.img ? `<g clip-path="url(#ppOval${c.id})" opacity=".35"><circle cx="370" cy="360" r="130" fill="#0b1a2b"/><path d="M130 840 Q140 560 370 540 Q600 560 610 840Z" fill="#0b1a2b"/></g>` : '';
+        : (f => `<image href="${esc(c.img)}" ${frames.has(c.img) ? 'crossorigin="anonymous"' : ''} x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" preserveAspectRatio="xMidYMin meet" clip-path="url(#ppOval${c.id})" ${miss ? 'filter="url(#ppGray)"' : ''}/>`)(
+            frames.get(c.img) || (c.espn ? { x: -153, y: 116, w: 1046, h: 760 } : { x: -130, y: 15, w: 1000, h: 1000 }));
+      const silhouette = !src ? `<g clip-path="url(#ppOval${c.id})" opacity=".35"><circle cx="370" cy="360" r="130" fill="#0b1a2b"/><path d="M130 840 Q140 560 370 540 Q600 560 610 840Z" fill="#0b1a2b"/></g>` : '';
       el.card.className = 'pp-card' + (miss ? ' miss' : '') + (c.pinpoint ? ' pinpoint' : '');
       el.card.innerHTML = `
         <svg viewBox="0 0 740 1060" width="740" height="1060">
@@ -211,7 +238,7 @@ window.PP = (() => {
         <div class="pp-ctext pp-fb2">${esc(fbSub)}</div>
         ${c.pinpoint ? `<div class="pp-pin"><span>Best possible answer</span>PINPOINT!</div>` : ''}
         ${c.rare && !c.pinpoint ? `<div class="pp-rare">Rare find</div>` : ''}
-        ${c.who ? `<div class="pp-who" style="--pc:${esc(c.whoColor || '#fff')}">${esc(c.who)}${miss ? ' · STRIKE' : ' +' + esc(c.pts)}</div>` : ''}`;
+        ${c.who ? `<div class="pp-who" style="--pc:${esc(c.whoColor || '#fff')}">${esc(c.who)}${miss ? ' \u00b7 STRIKE' : ' +' + esc(c.pts)}</div>` : ''}`;
       // restart entrance animation
       el.card.classList.remove('enter'); void el.card.offsetWidth; el.card.classList.add('enter');
     }
@@ -237,7 +264,7 @@ window.PP = (() => {
       el.strikes.innerHTML = ps.map((p, i) => {
         let boxes;
         if (max > 0 && max <= 5) boxes = Array.from({ length: max }, (_, k) => `<div class="pp-box${k < p.strikes ? ' x' : ''}${k === p.strikes - 1 && lastStrikes[i] != null && p.strikes > lastStrikes[i] ? ' new' : ''}">${k < p.strikes ? XSVG : ''}</div>`).join('');
-        else boxes = `<div class="pp-box x">${XSVG}</div><div class="pp-xcount">× ${p.strikes}</div>`;
+        else boxes = `<div class="pp-box x">${XSVG}</div><div class="pp-xcount">\u00d7 ${p.strikes}</div>`;
         return `<div class="pp-scol${p.out ? ' out' : ''}">${boxes}</div>`;
       }).join('');
       ps.forEach((p, i) => { lastScores[i] = p.score; lastStrikes[i] = p.strikes; });
@@ -256,7 +283,7 @@ window.PP = (() => {
       const per = Math.ceil(n / cols);
       const rh = Math.min(64, Math.floor((830 - 5 * (per - 1)) / per));
       el.board.innerHTML = `
-        <div class="pp-bhead"><b>${esc(S.title || '')}</b><span>${esc(S.sub || '')} · Top ${esc(S.size || n)}</span></div>
+        <div class="pp-bhead"><b>${esc(S.title || '')}</b><span>${esc(S.sub || '')} \u00b7 Top ${esc(S.size || n)}</span></div>
         <div class="pp-bgrid" style="grid-template-rows:repeat(${per},${rh}px);grid-template-columns:repeat(${cols},1fr);font-size:${Math.round(rh * 0.56)}px">
           ${rows.map(r => `<div class="pp-slot${r.c ? ' got' : ''}${r.rv ? ' rv' : ''}" style="${r.c ? `--pc:${esc(r.c)}` : ''}">
             <span class="r">${esc(r.r)}</span><span class="n">${r.n ? esc(r.n) : '?????'}</span><span class="v">${r.n ? esc(fmtVal(r.v)) : ''}</span></div>`).join('')}
@@ -297,7 +324,7 @@ window.PP = (() => {
     return fit;
   }
 
-  // ── Transport: Jomboy relay (WebSocket + stored state) + BroadcastChannel ────
+  // \u2500\u2500 Transport: Jomboy relay (WebSocket + stored state) + BroadcastChannel \u2500\u2500\u2500\u2500
   const hubOf = params => (params.get('hub') || HUB_DEFAULT).replace(/\/$/, '');
   function publisher(hub, getRoom, onStatus) {
     let bc = null, bcRoom = null, inflight = 0;
@@ -306,14 +333,14 @@ window.PP = (() => {
       if (bcRoom !== room) { try { bc && bc.close(); bc = new BroadcastChannel('npp-' + room); bcRoom = room; } catch { bc = null; } }
       try { bc && bc.postMessage(payload); } catch {}
       const my = ++inflight;
-      onStatus('sending…', '');
+      onStatus('sending\u2026', '');
       try {
         const r = await fetch(`${hub}/r/${encodeURIComponent(room)}`, { method: 'POST', body: JSON.stringify(payload), signal: AbortSignal.timeout(6000) });
         const j = await r.json().catch(() => ({}));
         if (my !== inflight) return;
         if (!r.ok) throw new Error('HTTP ' + r.status);
-        onStatus(`on air · ${j.sent ?? 0} screen${j.sent === 1 ? '' : 's'} listening`, 'ok');
-      } catch { if (my === inflight) onStatus('relay unreachable — OBS will not update', 'bad'); }
+        onStatus(`on air \u00b7 ${j.sent ?? 0} screen${j.sent === 1 ? '' : 's'} listening`, 'ok');
+      } catch { if (my === inflight) onStatus('relay unreachable \u2014 OBS will not update', 'bad'); }
     };
   }
   async function fetchRoom(hub, room) {
