@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NFL Pinpoint — Control</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pp.css?v=4">
+<style>
+  :root { --navy:#0d1f2d; --navy2:#13293b; --navy3:#1b3850; --line:#24425c; --gold:#fbcc7a; --ink:#eef3f8; --dim:#9fb2c4; --red:#ff5a5f; --green:#3ddc84; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; background:var(--navy); color:var(--ink); font:14px/1.4 'DM Sans', system-ui, sans-serif; }
+  button, input, select, textarea { font:inherit; color:inherit; }
+  header { display:flex; align-items:center; gap:14px; padding:10px 16px; border-bottom:1px solid var(--line); background:#0a1824; }
+  header h1 { margin:0; font:400 30px/1 'Bebas Neue'; letter-spacing:.04em; color:var(--gold); }
+  header h1 small { color:var(--dim); font-size:18px; margin-left:6px; }
+  .grow { flex:1; }
+  .pill { font:500 12px 'DM Mono'; padding:5px 10px; border-radius:20px; background:var(--navy3); color:var(--dim); }
+  .pill.ok { background:#123d2a; color:var(--green); } .pill.bad { background:#4a1b1f; color:#ffb3b5; }
+  label.inl { display:flex; align-items:center; gap:6px; font:500 12px 'DM Mono'; color:var(--dim); text-transform:uppercase; }
+  input[type=text], input[type=number], select, textarea { background:#0a1824; border:1px solid var(--line); border-radius:7px; padding:7px 9px; outline:none; }
+  input:focus, select:focus, textarea:focus { border-color:var(--gold); }
+  button { background:var(--navy3); border:1px solid var(--line); border-radius:8px; padding:7px 12px; cursor:pointer; font-weight:500; }
+  button:hover { border-color:var(--gold); }
+  button.gold { background:var(--gold); color:#14202b; border-color:var(--gold); font-weight:700; }
+  button.red { background:#5a1d22; border-color:#8a2d34; }
+  button.on { background:#2b4a2f; border-color:var(--green); color:#c9f5d9; }
+  button.sm { padding:4px 8px; font-size:12px; }
+  main { display:grid; grid-template-columns:340px 1fr 380px; height:calc(100% - 55px); }
+  .col { overflow:auto; padding:14px; border-right:1px solid var(--line); }
+  .col:last-child { border-right:0; }
+  h2 { font:400 20px/1 'Bebas Neue'; letter-spacing:.06em; color:var(--gold); margin:18px 0 10px; display:flex; align-items:center; gap:8px; }
+  h2:first-child { margin-top:0; }
+  h2 .grow + * { font:500 11px 'DM Mono'; color:var(--dim); }
+  .tabs { display:flex; gap:4px; margin-bottom:10px; }
+  .tabs button { flex:1; padding:6px 4px; font-size:12px; }
+  .tabs button.act { background:var(--gold); color:#14202b; border-color:var(--gold); font-weight:700; }
+  .pane { display:none; } .pane.act { display:block; }
+  .row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .row > * { min-width:0; }
+  .row input[type=text], .row select { flex:1; }
+  .lbl { font:500 11px 'DM Mono'; color:var(--dim); text-transform:uppercase; margin:10px 0 4px; }
+  .chips { display:flex; flex-wrap:wrap; gap:4px; }
+  .chips label { font:500 12px 'DM Mono'; background:#0a1824; border:1px solid var(--line); border-radius:6px; padding:4px 7px; cursor:pointer; user-select:none; }
+  .chips input { display:none; }
+  .chips label:has(input:checked) { background:var(--gold); color:#14202b; border-color:var(--gold); }
+  .teams { max-height:150px; overflow:auto; }
+  textarea { width:100%; min-height:120px; resize:vertical; font:12px/1.45 'DM Mono'; }
+  .hint { font-size:12px; color:var(--dim); margin:6px 0; }
+  .hint code { font:11px 'DM Mono'; color:var(--gold); }
+  .player { display:grid; grid-template-columns:28px 1fr 34px; gap:6px; margin-bottom:6px; align-items:center; }
+  .player .num { font:400 20px 'Bebas Neue'; color:var(--dim); text-align:center; }
+  .player input[type=color] { width:34px; height:32px; padding:0; border:1px solid var(--line); border-radius:6px; background:none; }
+  /* center */
+  .center { display:flex; flex-direction:column; gap:12px; }
+  .center > * { flex-shrink:0; }
+  .nowbar { display:flex; align-items:center; gap:10px; background:var(--navy2); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+  .nowbar .who { flex:1; font:400 34px/1 'Bebas Neue'; letter-spacing:.03em; }
+  .nowbar .who span { font:500 12px 'DM Mono'; color:var(--dim); display:block; letter-spacing:0; margin-bottom:2px; }
+  .players-live { display:flex; gap:8px; }
+  .pl { flex:1; background:var(--navy2); border:2px solid var(--line); border-radius:10px; padding:8px 10px; cursor:pointer; position:relative; }
+  .pl.turn { border-color:var(--pc); box-shadow:0 0 0 2px var(--pc) inset; }
+  .pl .nm { font:400 22px/1 'Bebas Neue'; color:var(--pc); letter-spacing:.03em; }
+  .pl .sc { font:400 34px/1 'Bebas Neue'; }
+  .pl .xs { font:700 15px 'DM Mono'; color:var(--red); letter-spacing:2px; }
+  .pl.out { opacity:.45; } .pl.out::after { content:'OUT'; position:absolute; right:8px; top:6px; font:700 12px 'DM Mono'; color:var(--red); }
+  .pl .adj { position:absolute; right:6px; bottom:6px; display:flex; gap:3px; opacity:0; }
+  .pl:hover .adj { opacity:1; }
+  .pl .adj button { padding:1px 6px; font-size:11px; }
+  .guess { position:relative; }
+  .guess input { width:100%; font:600 26px 'DM Sans'; padding:14px 16px; border-radius:12px; border:2px solid var(--line); background:#0a1824; }
+  .guess input:focus { border-color:var(--gold); }
+  .sugg { position:absolute; left:0; right:0; top:100%; margin-top:4px; background:#0a1824; border:1px solid var(--gold); border-radius:10px; overflow:hidden; z-index:20; display:none; box-shadow:0 12px 30px rgba(0,0,0,.5); }
+  .sugg div { padding:8px 14px; cursor:pointer; display:flex; gap:10px; align-items:baseline; }
+  .sugg div.sel, .sugg div:hover { background:var(--navy3); }
+  .sugg b { font-weight:600; } .sugg i { font-style:normal; font:12px 'DM Mono'; color:var(--dim); }
+  .sugg .tag { margin-left:auto; font:600 11px 'DM Mono'; padding:2px 6px; border-radius:5px; }
+  .tag.on { background:#123d2a; color:var(--green); } .tag.dup { background:#3a3a3a; color:#bbb; } .tag.offl { background:#3a1d20; color:#ffb3b5; }
+  #result { min-height:44px; border-radius:10px; padding:10px 14px; background:var(--navy2); border:1px solid var(--line); display:flex; align-items:center; gap:10px; font-weight:500; }
+  #result.hit { background:#123d2a; border-color:var(--green); }
+  #result.miss { background:#4a1b1f; border-color:var(--red); }
+  #result.warn { background:#4a3b12; border-color:var(--gold); }
+  .btns { display:flex; flex-wrap:wrap; gap:6px; }
+  .kbd { font:500 10px 'DM Mono'; color:var(--dim); border:1px solid var(--line); border-radius:4px; padding:0 4px; margin-left:4px; }
+  .previewbox { position:relative; width:100%; aspect-ratio:16/9; border-radius:10px; overflow:hidden; border:1px solid var(--line);
+    background:#55625c url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="16" height="16" fill="%23606d67"/><rect x="16" y="16" width="16" height="16" fill="%23606d67"/></svg>'); }
+  #pvHost { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:0 0; }
+  details { background:var(--navy2); border:1px solid var(--line); border-radius:10px; padding:8px 12px; }
+  summary { cursor:pointer; font:400 18px 'Bebas Neue'; letter-spacing:.05em; color:var(--gold); }
+  .sl { display:grid; grid-template-columns:70px 1fr 64px; gap:8px; align-items:center; margin:6px 0; font:500 12px 'DM Mono'; color:var(--dim); }
+  .sl input[type=range] { width:100%; }
+  .sl input[type=number] { width:64px; padding:3px 5px; font:12px 'DM Mono'; }
+  .previewbox { touch-action:none; } .previewbox.dragging, .previewbox.dragging * { cursor:grabbing !important; }
+  /* right */
+  .meta { font:500 12px 'DM Mono'; color:var(--dim); margin-bottom:8px; }
+  .meta b { color:var(--ink); }
+  .key { display:grid; grid-template-columns:1fr; gap:2px; }
+  .k { display:grid; grid-template-columns:42px 1fr auto; gap:8px; padding:4px 8px; border-radius:6px; background:#0f2333; cursor:pointer; border-left:4px solid transparent; font-size:13px; }
+  .k:hover { background:var(--navy3); }
+  .k .r { font:500 12px 'DM Mono'; color:var(--dim); }
+  .k .v { font:12px 'DM Mono'; color:var(--dim); }
+  .k.got { border-left-color:var(--pc); background:color-mix(in srgb, var(--pc) 18%, #0f2333); }
+  .k.got .n::after { content:' ✓'; color:var(--pc); }
+  .k.rv { opacity:.6; }
+  .log { font:12px/1.5 'DM Mono'; color:var(--dim); }
+  .log div { padding:2px 0; border-bottom:1px solid #16303f; }
+  .log .h { color:var(--green); } .log .m { color:#ffb3b5; }
+  .over { background:linear-gradient(90deg,#3c2f10,#13293b); border:1px solid var(--gold); border-radius:12px; padding:12px 14px; font:400 26px 'Bebas Neue'; letter-spacing:.04em; display:none; }
+  .over.on { display:block; }
+  .scroll-key { max-height:calc(100vh - 260px); overflow:auto; }
+  #imgOverride { width:100%; }
+</style>
+</head>
+<body>
+<header>
+  <h1>NFL Pinpoint Challenge <small>control</small></h1>
+  <div class="grow"></div>
+  <label class="inl">Room <input type="text" id="room" style="width:130px"></label>
+  <button id="copyObs" title="Copy the OBS browser source URL (1920×1080)">Copy OBS URL</button>
+  <button id="openObs">Open display</button>
+  <span class="pill" id="status">idle</span>
+</header>
+<main>
+  <!-- LEFT: setup -->
+  <section class="col">
+    <h2>The list</h2>
+    <div class="tabs" id="srcTabs">
+      <button data-t="trivia" class="act">Jomboy Trivia</button>
+      <button data-t="build">Build</button>
+      <button data-t="upload">Upload</button>
+      <button data-t="saved">Saved</button>
+    </div>
+    <div class="pane act" data-p="trivia">
+      <div class="row">
+        <select id="trvKind"><option value="fpd">NFL Daily (Top 100)</option><option value="fpm">NFL Mini (Top 10)</option></select>
+      </div>
+      <div class="row"><select id="trvDate"><option>Loading schedule…</option></select></div>
+      <div class="row"><button class="gold" id="trvLoad" style="flex:1">Load this list</button><button id="trvRefresh" title="Re-fetch the schedule">↻</button></div>
+      <div class="hint">Pulls the daily lists straight from jomboytrivia.com and computes them from the same stats the site uses.</div>
+    </div>
+    <div class="pane" data-p="build">
+      <div class="lbl">Stat</div>
+      <select id="bStat" style="width:100%"></select>
+      <div class="lbl">Years</div>
+      <div class="row"><input type="number" id="bY0" style="width:90px"> <span>to</span> <input type="number" id="bY1" style="width:90px">
+        <button class="sm" data-yr="all">All</button><button class="sm" data-yr="2000">'00+</button><button class="sm" data-yr="2020">'20s</button></div>
+      <div class="lbl">Pool</div>
+      <div class="chips" id="bPool">
+        <label><input type="radio" name="pool" value="all" checked>All NFL</label>
+        <label><input type="radio" name="pool" value="AFC">AFC</label>
+        <label><input type="radio" name="pool" value="NFC">NFC</label>
+        <label><input type="radio" name="pool" value="team">Teams…</label>
+      </div>
+      <div class="chips teams" id="bTeams" style="display:none;margin-top:6px"></div>
+      <div class="lbl">Positions <span style="text-transform:none">(none = all)</span></div>
+      <div class="chips" id="bPos">
+        <label><input type="checkbox" value="0">QB</label><label><input type="checkbox" value="1">RB</label>
+        <label><input type="checkbox" value="2">WR</label><label><input type="checkbox" value="3">TE</label>
+      </div>
+      <div class="lbl">List size</div>
+      <div class="chips" id="bSize">
+        <label><input type="radio" name="size" value="10">10</label><label><input type="radio" name="size" value="25">25</label>
+        <label><input type="radio" name="size" value="50">50</label><label><input type="radio" name="size" value="100" checked>100</label>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="gold" id="bGo" style="flex:1">Build list</button></div>
+    </div>
+    <div class="pane" data-p="upload">
+      <div class="row"><input type="file" id="upFile" accept=".csv,.tsv,.txt,text/plain,text/csv" style="flex:1"></div>
+      <textarea id="upText" placeholder="Paste a list — one player per line:&#10;1, Derrick Henry, 13650&#10;2, LeSean McCoy, 10465&#10;…&#10;&#10;or  Name, Value  (ranked by value)&#10;or just names in rank order"></textarea>
+      <div class="hint">Any of <code>rank, name, value</code> · <code>name, value</code> · <code>name</code> (in order). Comma, tab or pipe. A header row is fine. Ties share a rank (T12).</div>
+      <div class="row"><input type="text" id="upTitle" placeholder="List title (e.g. Most sacks since 2000)"></div>
+      <div class="row"><input type="text" id="upLabel" placeholder="Card stat label (e.g. Career Sacks)"></div>
+      <div class="row"><input type="text" id="upSub" placeholder="Football line (e.g. Since 2000)"></div>
+      <div class="row"><button class="gold" id="upGo" style="flex:1">Use this list</button><button id="upSave" title="Save to this browser">Save</button></div>
+    </div>
+    <div class="pane" data-p="saved">
+      <div id="savedList" class="hint">No saved lists yet. Upload or build a list, then hit Save.</div>
+    </div>
+
+    <h2>On-air text</h2>
+    <div class="lbl">List title</div><input type="text" id="tTitle" style="width:100%">
+    <div class="row" style="margin-top:6px">
+      <div style="flex:1"><div class="lbl">Card stat label</div><input type="text" id="tLabel" style="width:100%"></div>
+      <div style="width:120px"><div class="lbl">Football line</div><input type="text" id="tSub" style="width:100%"></div>
+    </div>
+    <div class="row"><button class="sm" id="saveCur">Save list to library</button><button class="sm" id="exportCsv">Export CSV</button></div>
+
+    <h2>Contestants</h2>
+    <div id="playersEd"></div>
+    <div class="row"><button class="sm" id="addP">+ Add</button><button class="sm" id="remP">− Remove</button></div>
+    <div class="row">
+      <label class="inl">Strikes <select id="strikes"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="5">5</option><option value="0">Unlimited</option></select></label>
+      <label class="inl">Order <select id="order"><option value="snake">Snake</option><option value="seq">In order</option></select></label>
+    </div>
+    <div class="row"><label class="inl">Card colors <select id="themeMode"><option value="rotate">Rotate each pick</option><option value="0">Cyan / pink</option><option value="1">Yellow / green</option><option value="2">Orange / blue</option><option value="3">Lime / red</option><option value="4">Purple / orange</option><option value="5">Coral / teal</option></select></label></div>
+    <div class="row"><button class="gold" id="newGame" style="flex:1">New game (reset scores)</button></div>
+
+    <h2>Data</h2>
+    <div class="hint" id="dataInfo"></div>
+    <button class="sm" id="refreshData">Refresh stats from jomboytrivia.com</button>
+  </section>
+
+  <!-- CENTER: live -->
+  <section class="col center">
+    <div class="over" id="overBanner"></div>
+    <div class="players-live" id="plLive"></div>
+    <div class="guess">
+      <input type="text" id="gIn" placeholder="Type the player's name… (Enter)" autocomplete="off" spellcheck="false">
+      <div class="sugg" id="sugg"></div>
+    </div>
+    <div id="result">Load a list, set your contestants, and start typing names.</div>
+    <div class="btns">
+      <button id="bCard">Card<span class="kbd">C</span></button>
+      <button id="bScore">Scoreboard<span class="kbd">S</span></button>
+      <button id="bStrikes">Strike boxes<span class="kbd">X</span></button>
+      <button id="bTurn">Turn arrow<span class="kbd">T</span></button>
+      <button id="bTitle">List title</button>
+      <button id="bBoard">Full board<span class="kbd">B</span></button>
+      <span class="grow"></span>
+      <button id="bPrev">◀ Prev<span class="kbd">←</span></button>
+      <button id="bNext">Next ▶<span class="kbd">→</span></button>
+      <button class="red" id="bStrike">+ Strike</button>
+      <button id="bUndo">Undo<span class="kbd">U</span></button>
+      <button id="bReveal">Reveal rest</button>
+    </div>
+    <div class="previewbox"><div id="pvHost"></div></div>
+    <details>
+      <summary>Card photo</summary>
+      <div class="row" style="margin-top:8px"><input type="text" id="imgOverride" placeholder="Paste an image URL to replace the current card photo"><button id="imgApply">Apply</button></div>
+      <div class="hint">Photos come from NFL.com cutouts (most players since 1970). Older players fall back to Wikipedia. You can also drop an image file onto the preview.</div>
+    </details>
+    <details open>
+      <summary>Layout — sizes &amp; positions</summary>
+      <div class="hint">Drag the card, scoreboard or strike boxes on the preview to move them. Scroll over one to resize it.</div>
+      <div class="row"><span class="lbl" style="margin:0;width:90px">Card size</span>
+        <button class="sm" data-csize="60">S</button><button class="sm" data-csize="80">M</button><button class="sm" data-csize="100">L</button><button class="sm" data-csize="120">XL</button></div>
+      <div class="row"><span class="lbl" style="margin:0;width:90px">Scoreboard</span>
+        <button class="sm" data-ssize="70">S</button><button class="sm" data-ssize="85">M</button><button class="sm" data-ssize="100">L</button><button class="sm" data-ssize="115">XL</button></div>
+      <label class="inl" style="margin:6px 0"><input type="checkbox" id="linkK"> Strike boxes move with the scoreboard</label>
+      <div id="layoutSl"></div>
+      <button class="sm" id="layReset">Reset layout</button>
+    </details>
+  </section>
+
+  <!-- RIGHT: answer key -->
+  <section class="col">
+    <h2>Answer key <span class="grow"></span><span id="keyCount"></span></h2>
+    <div class="meta" id="keyMeta">No list loaded.</div>
+    <div class="hint">Click a row to award it to whoever is picking.</div>
+    <div class="key scroll-key" id="key"></div>
+    <h2>Log</h2>
+    <div class="log" id="log"></div>
+  </section>
+</main>
+
+<script src="pp.js?v=4"></script>
+<script src="fpdata.js?v=4"></script>
+<script src="players.js?v=4"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const hub = PP.hubOf(params);
+  const LS = { get: (k, d) => { try { const v = localStorage.getItem('npp_' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+               set: (k, v) => { try { localStorage.setItem('npp_' + k, JSON.stringify(v)); } catch {} } };
+
+  // ── data ────────────────────────────────────────────────────────────────
+  let DS = window.NPP_FPDATA;
+  const DSmeta = () => DS.meta || {};
+  // nflverse index: name|pos|rookie|last|team|hs|pfr|college|espn
+  const NV = (window.NFLP_PLAYERS || '').split('\n').map(l => { const a = l.split('|'); return { n: a[0], pos: a[1], y0: +a[2] || 0, y1: +a[3] || 0, team: a[4], hs: a[5], pfr: a[6], col: a[7], espn: a[8], k: PP.norm(a[0]) }; });
+  const NVbyName = new Map(); NV.forEach(p => { if (!NVbyName.has(p.k)) NVbyName.set(p.k, []); NVbyName.get(p.k).push(p); });
+  const NVbyPfr = new Map(); NV.forEach(p => p.pfr && NVbyPfr.set(p.pfr, p));
+  let FPP = [];       // dataset players with years/pos
+  function indexDS() {
+    const yrs = new Map(), posG = new Map();
+    for (const r of DS.offense) {
+      const pi = r[0]; const c = yrs.get(pi);
+      if (!c) yrs.set(pi, [r[2], r[2]]); else { if (r[2] < c[0]) c[0] = r[2]; if (r[2] > c[1]) c[1] = r[2]; }
+      if (!posG.has(pi)) posG.set(pi, {}); const g = posG.get(pi); g[r[3]] = (g[r[3]] || 0) + r[4];
+    }
+    const PS = ['QB','RB','WR','TE','RB','K'];
+    FPP = DS.playerIndex.map((id, i) => {
+      const p = DS.players[id] || { n: id }; const y = yrs.get(i) || [0, 0]; const g = posG.get(i) || {};
+      let best = -1, bp = ''; for (const k in g) if (g[k] > best) { best = g[k]; bp = PS[k] || ''; }
+      return { id, n: p.n, k: PP.norm(p.n), y0: y[0], y1: y[1], pos: bp, hs: (DS.hs && DS.hs[id]) || (NVbyPfr.get(id) || {}).hs || '' };
+    });
+    $('dataInfo').innerHTML = `Stats through <b>${PP.esc(DSmeta().dataAsOf2026 || DSmeta().generated || '?')}</b> · ${DS.playerIndex.length.toLocaleString()} players (QB/RB/WR/TE, ${DSmeta().firstYear}–${DSmeta().lastYear}) · ${NV.length.toLocaleString()} players for photos & custom lists.`;
+  }
+
+  // ── state ───────────────────────────────────────────────────────────────
+  const G = {
+    list: null,                  // {title, sub, label, size, short, rows:[{rank,dr,name,val,id,hs,k,found,rv}], full:[...]|null, src}
+    players: LS.get('players', [{ name:'Dalton', color:PP.PLAYER_COLORS[0] }, { name:'Justin', color:PP.PLAYER_COLORS[1] }, { name:'Shelfy', color:PP.PLAYER_COLORS[2] }]).map(p => ({ name:p.name, color:p.color, score:0, strikes:0, out:false })),
+    maxStrikes: LS.get('strikes', 3), order: LS.get('order', 'snake'), themeMode: LS.get('themeMode', 'rotate'),
+    turn: 0, dir: 1, guesses: [], misses: [], card: null, cardN: 0,
+    show: Object.assign({ card:true, score:true, strikes:true, turn:true, title:false, board:false }, LS.get('show', {})),
+    layout: Object.assign({}, PP.LAY_DEFAULT, LS.get('layout', {})),
+  };
+  const undoStack = [];
+  const snap = () => JSON.stringify({ players: G.players, turn: G.turn, dir: G.dir, guesses: G.guesses, misses: G.misses, card: G.card, cardN: G.cardN, showCard: G.show.card, showBoard: G.show.board,
+    found: G.list ? G.list.rows.map(r => [r.found, r.rv]) : [] });
+  function pushUndo() { undoStack.push(snap()); if (undoStack.length > 200) undoStack.shift(); }
+  function undo() {
+    const s = undoStack.pop(); if (!s) return flash('Nothing to undo', 'warn');
+    const o = JSON.parse(s);
+    Object.assign(G, { players: o.players, turn: o.turn, dir: o.dir, guesses: o.guesses, misses: o.misses, card: o.card, cardN: o.cardN });
+    G.show.card = o.showCard; G.show.board = o.showBoard;
+    if (G.list) G.list.rows.forEach((r, i) => { [r.found, r.rv] = o.found[i] || [null, false]; });
+    flash('Undone', 'warn'); log('↶ undo'); renderAll(); publish();
+  }
+
+  // ── transport ───────────────────────────────────────────────────────────
+  const roomIn = $('room'); roomIn.value = params.get('room') || LS.get('room', 'pinpoint');
+  roomIn.addEventListener('change', () => { roomIn.value = roomIn.value.trim().replace(/[^\w-]/g, '') || 'pinpoint'; LS.set('room', roomIn.value); lastSig = ''; publish(); });
+  const setStatus = (t, c) => { const s = $('status'); s.textContent = t; s.className = 'pill ' + (c || ''); };
+  const send = PP.publisher(hub, () => roomIn.value, setStatus);
+  const displayUrl = () => new URL('display.html?room=' + encodeURIComponent(roomIn.value), location.href).href;
+  $('copyObs').onclick = async () => { try { await navigator.clipboard.writeText(displayUrl()); flash('OBS URL copied — browser source 1920×1080: ' + displayUrl(), 'hit'); } catch { prompt('OBS browser source URL (1920×1080):', displayUrl()); } };
+  $('openObs').onclick = () => window.open(displayUrl() + '&bg=1', 'npp_display', 'width=960,height=540');
+
+  function payload() {
+    const L = G.list;
+    return {
+      app: 'npp', show: G.show, card: G.card && G.card.hold ? null : G.card, turn: G.turn, maxStrikes: G.maxStrikes, layout: G.layout,
+      players: G.players.map(p => ({ name: p.name, color: p.color, score: p.score, strikes: p.strikes, out: p.out })),
+      title: L ? L.title : '', sub: L ? L.sub : '', cardLabel: L ? L.label : '', size: L ? L.size : '',
+      board: G.show.board && L ? L.rows.map(r => ({ r: r.dr, n: r.found != null || r.rv ? r.name : '', v: r.found != null || r.rv ? r.val : '', c: r.found != null ? G.players[r.found]?.color : '', rv: !!r.rv && r.found == null })) : null,
+    };
+  }
+  let lastSig = '', pubT = 0;
+  function publish() {
+    const p = payload();
+    pv.render(Object.assign({ seq: Date.now() }, p));
+    clearTimeout(pubT);
+    pubT = setTimeout(() => {
+      const sig = JSON.stringify(p) + roomIn.value;
+      if (sig === lastSig) return;
+      lastSig = sig;
+      send(Object.assign({ seq: Date.now() }, p));
+    }, 120);
+  }
+
+  // ── preview ─────────────────────────────────────────────────────────────
+  const pvHost = $('pvHost');
+  const pv = PP.createStage(pvHost);
+  PP.fitStage(pvHost);
+
+  // ── helpers ─────────────────────────────────────────────────────────────
+  function flash(msg, cls) { const r = $('result'); r.className = cls || ''; r.innerHTML = msg; }
+  function log(msg, cls) { const d = document.createElement('div'); d.className = cls || ''; d.textContent = msg; $('log').prepend(d); }
+  const theme = () => G.themeMode === 'rotate' ? G.cardN % PP.CARD_THEMES.length : +G.themeMode;
+
+  // headshot resolution
+  const imgCache = LS.get('imgcache', {});
+  function nvMatch(name, y0, y1) {
+    const c = NVbyName.get(PP.norm(name)) || NVbyName.get(PP.normHy(name)) || [];
+    if (!c.length) return null;
+    if (c.length === 1 || !y0) return c.slice().sort((a, b) => b.y1 - a.y1)[0];
+    const ov = c.filter(p => p.y0 <= y1 + 1 && p.y1 >= y0 - 1);
+    return (ov.length ? ov : c).sort((a, b) => (b.y1 - b.y0) - (a.y1 - a.y0))[0];
+  }
+  function fpByName(name) { const k = PP.norm(name); return FPP.filter(p => p.k === k).sort((a, b) => (b.y1 - b.y0) - (a.y1 - a.y0))[0] || null; }
+  // candidate photo codes, best first
+  function imgCands(o) {
+    const out = [];
+    const add = c => { if (c && !out.includes(c)) out.push(c); };
+    add(imgCache[PP.norm(o.name)]);
+    add(o.hs);
+    const fp = o.id ? FPP.find(p => p.id === o.id) : fpByName(o.name);
+    if (fp) add(fp.hs);
+    const nv = (o.id && NVbyPfr.get(o.id)) || nvMatch(o.name, (fp || o).y0, (fp || o).y1);
+    if (nv) { add(nv.hs); add(nv.espn && 'e' + nv.espn); }
+    return out;
+  }
+  const probe = src => new Promise(res => { const im = new Image(); const t = setTimeout(() => res(false), 2000);
+    im.onload = () => { clearTimeout(t); res(im.naturalWidth > 2); }; im.onerror = () => { clearTimeout(t); res(false); }; im.src = src; });
+  const imgFields = code => ({ img: PP.headshotUrl(code), photo: /^https?:|^data:/.test(code), espn: code[0] === 'e' });
+  // Fill the card's photo. NFL.com codes are pre-checked at build time so they go straight to air;
+  // anything else is probed here first so a dead link never reaches OBS.
+  function attachImg(card, o) {
+    const cands = imgCands(o);
+    if (cands[0] && /^[up]/.test(cands[0])) return Object.assign(card, imgFields(cands[0]));
+    // Hold the card back (scores still update) until the photo is found, so it goes on air with its photo.
+    // Real photos only (NFL.com, ESPN, Wikipedia). If none exists in ~3.5s the card airs with the plain silhouette.
+    card.img = ''; card.hold = true;
+    const find = (async () => {
+      for (const c of cands) { const f = imgFields(c); if (await probe(f.img)) return f; }
+      const w = await wikiImg(card.name); return w && await probe(w) ? { img: w, photo: true, espn: false } : null;
+    })();
+    const deadline = new Promise(r => setTimeout(() => r('late'), 3500));
+    Promise.race([find, deadline]).then(f => {
+      if (!G.card || G.card.id !== card.id) return;
+      G.card = Object.assign({}, G.card, f && f !== 'late' ? f : {}, { hold: false }); renderLive(); publish();
+      if (f === 'late') find.then(f2 => { if (f2 && G.card && G.card.id === card.id && !G.card.img) flash(`Found a photo for <b>${PP.esc(card.name)}</b> late — <a href="#" id="lateImg" style="color:var(--gold)">put it on the card</a>.`, 'warn'), setTimeout(() => { const a = $('lateImg'); if (a) a.onclick = e => { e.preventDefault(); setCardImg(f2.img); }; }, 0); });
+    });
+    return card;
+  }
+  async function wikiImg(name) {
+    for (const t of [name + ' (American football)', name]) {
+      try {
+        const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(t.replace(/ /g, '_')), { signal: AbortSignal.timeout(5000) });
+        if (!r.ok) continue;
+        const j = await r.json();
+        if (j.type === 'disambiguation') continue;
+        if (!/football|quarterback|running back|receiver|tight end|NFL|linebacker|defensive|cornerback|safety|end/i.test((j.description || '') + ' ' + (j.extract || ''))) continue;
+        const src = (j.originalimage && j.originalimage.source) || (j.thumbnail && j.thumbnail.source);
+        if (src) return src;
+      } catch {}
+    }
+    return '';
+  }
+  // ── list loading ────────────────────────────────────────────────────────
+  function setList(L, keepGame) {
+    L.rows.forEach(r => { r.k = PP.norm(r.name); r.kh = PP.normHy(r.name); r.found = null; r.rv = false; });
+    L.maxRank = L.rows.length ? Math.max(...L.rows.map(r => r.rank)) : 0;
+    G.list = L;
+    $('tTitle').value = L.title; $('tLabel').value = L.label; $('tSub').value = L.sub;
+    if (!keepGame) resetGame(true);
+    LS.set('lastList', { title: L.title, label: L.label, sub: L.sub, size: L.size, src: L.src, spec: L.spec || null, rows: L.spec ? null : L.rows.map(r => [r.rank, r.dr, r.name, r.val]) });
+    log(`📋 ${L.title} (${L.rows.length})`);
+    renderAll(); publish();
+    flash(`Loaded <b>${PP.esc(L.title)}</b> — ${L.rows.length} players. Type a name to start.`, 'hit');
+    setTimeout(() => $('gIn').focus(), 50);
+  }
+  function listFromSpec(spec, title) {
+    const { top, full } = PP.computeList(DS, spec);
+    const st = PP.STATS[spec.stat] || { card: spec.stat, short: '' };
+    const sub = PP.subtitleFor(spec.yearMin, spec.yearMax, DSmeta().firstYear, DSmeta().lastYear);
+    const rows = top.map(r => ({ rank: r.rank, dr: r.dr, name: r.name, val: r.val, id: r.id, hs: r.hs }));
+    return { title: title || autoTitle(spec, sub), label: st.card, sub, size: spec.listSize, short: st.short, rows, full, src: 'build', spec };
+  }
+  function autoTitle(spec, sub) {
+    const st = PP.STATS[spec.stat]; const pos = (spec.posCodes || []).map(c => ['QB','RB','WR','TE'][c]).join('/');
+    const pool = spec.poolTab === 'conf' ? spec.confValues.join('/') + ' ' : spec.poolTab === 'team' ? spec.teamCodes.join('/') + ' ' : '';
+    return `${pool}${pos ? pos + ' ' : ''}${st.label} ${sub}`.trim();
+  }
+
+  // Jomboy Trivia schedule
+  let schedule = { fpd: null, fpm: null };
+  async function loadSchedule(kind, force) {
+    if (schedule[kind] && !force) return fillDates(kind);
+    $('trvDate').innerHTML = '<option>Loading schedule…</option>';
+    try {
+      const r = await fetch('https://www.jomboytrivia.com/api/schedule-' + kind, { cache: 'no-store', signal: AbortSignal.timeout(10000) });
+      const j = await r.json(); schedule[kind] = j.schedule || {}; LS.set('sched_' + kind, schedule[kind]);
+    } catch { schedule[kind] = LS.get('sched_' + kind, {}); flash('Couldn\'t reach jomboytrivia.com — using the last schedule this browser saw.', 'warn'); }
+    fillDates(kind);
+  }
+  function fillDates(kind) {
+    const s = schedule[kind] || {}; const today = new Date().toLocaleDateString('en-CA');
+    const ds = Object.keys(s).sort().reverse();
+    $('trvDate').innerHTML = ds.length ? ds.map(d => `<option value="${d}" ${d === today ? 'selected' : ''}>${d}${d === today ? ' (today)' : d > today ? ' (upcoming)' : ''} — ${PP.esc(s[d].title)}</option>`).join('') : '<option value="">No lists found</option>';
+  }
+  $('trvKind').onchange = () => loadSchedule($('trvKind').value);
+  $('trvRefresh').onclick = () => loadSchedule($('trvKind').value, true);
+  $('trvLoad').onclick = () => {
+    const kind = $('trvKind').value, d = $('trvDate').value, e = (schedule[kind] || {})[d];
+    if (!e) return flash('Pick a date first.', 'warn');
+    const gf = e.generatedFrom;
+    let L;
+    if (gf && gf.stat) {
+      L = listFromSpec({ stat: gf.stat, yearMin: gf.yearMin, yearMax: gf.yearMax, poolTab: gf.poolTab || 'all', confValues: gf.confValues || [], teamCodes: gf.teamCodes || [], posCodes: gf.posCodes || [], listSize: gf.listSize || e.listSize || 100 }, e.title);
+    } else {
+      const rows = (e.list || []).map(r => ({ rank: r.rank, dr: r.displayRank || String(r.rank), name: r.name, val: r.val }));
+      const st = PP.STATS[e.stat] || {};
+      L = { title: e.title, label: st.card || e.statLabel, sub: '', size: e.listSize, rows, full: null, src: 'trivia' };
+    }
+    L.src = 'trivia:' + kind + ':' + d;
+    if (kind === 'fpm' && e.strikes) { G.maxStrikes = e.strikes; $('strikes').value = String(e.strikes); }
+    setList(L);
+  };
+
+  // Build
+  const bStat = $('bStat');
+  bStat.innerHTML = PP.STAT_GROUPS.map(([g, ks]) => `<optgroup label="${g}">${ks.map(k => `<option value="${k}">${PP.STATS[k].label}</option>`).join('')}</optgroup>`).join('');
+  bStat.value = 'rush_yds';
+  const teamCodes = () => Object.keys(DS.teams).filter(c => c !== '2TM' && DS.teams[c].conf).sort();
+  function fillTeams() { $('bTeams').innerHTML = teamCodes().map(c => `<label title="${PP.esc(DS.teams[c].name)}"><input type="checkbox" value="${c}">${c}</label>`).join(''); }
+  $('bPool').onchange = () => { $('bTeams').style.display = document.querySelector('input[name=pool]:checked').value === 'team' ? 'flex' : 'none'; };
+  document.querySelectorAll('[data-yr]').forEach(b => b.onclick = () => { const v = b.dataset.yr, last = DSmeta().lastYear;
+    if (v === 'all') { $('bY0').value = DSmeta().firstYear; $('bY1').value = last; } else { $('bY0').value = v; $('bY1').value = last; } });
+  $('bGo').onclick = () => {
+    const pool = document.querySelector('input[name=pool]:checked').value;
+    const spec = { stat: bStat.value, yearMin: +$('bY0').value || DSmeta().firstYear, yearMax: +$('bY1').value || DSmeta().lastYear,
+      poolTab: pool === 'all' ? 'all' : pool === 'team' ? 'team' : 'conf', confValues: pool === 'AFC' || pool === 'NFC' ? [pool] : [],
+      teamCodes: [...document.querySelectorAll('#bTeams input:checked')].map(i => i.value),
+      posCodes: [...document.querySelectorAll('#bPos input:checked')].map(i => +i.value),
+      listSize: +document.querySelector('input[name=size]:checked').value };
+    if (spec.yearMin > spec.yearMax) [spec.yearMin, spec.yearMax] = [spec.yearMax, spec.yearMin];
+    if (spec.poolTab === 'team' && !spec.teamCodes.length) return flash('Pick at least one team.', 'warn');
+    const L = listFromSpec(spec);
+    if (!L.rows.length) return flash('That combination has no players.', 'warn');
+    setList(L);
+  };
+
+  // Upload
+  function parseList(text) {
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return [];
+    const delim = ['\t', '|', ','].find(d => lines.filter(l => l.includes(d)).length >= Math.ceil(lines.length * .6));
+    const num = s => { const t = String(s).replace(/[,\s$%]/g, ''); return t !== '' && !isNaN(+t) ? +t : null; };
+    let cells = lines.map(l => delim ? l.split(delim).map(c => c.trim().replace(/^"|"$/g, '')) : [l]);
+    // header?
+    let rankCol = -1, nameCol = -1, valCol = -1;
+    const head = cells[0].map(c => c.toLowerCase());
+    if (head.some(h => /^(player|name|rk|rank|#)$/.test(h)) || (cells[0].every(c => num(c.replace(/^t/i, '')) === null) && cells.length > 1 && cells[1].some(c => num(c) !== null))) {
+      rankCol = head.findIndex(h => /^(rk|rank|#|pos\.?)$/.test(h));
+      nameCol = head.findIndex(h => /player|name/.test(h));
+      cells = cells.slice(1);
+    }
+    if (!delim) {
+      // "1. Name - 123" / "Name 123" / "Name"
+      return cells.map(([l], i) => {
+        const m = l.match(/^\s*(T?\d+)[.):\-\s]+(.+?)(?:\s*[-–—:,]\s*|\s+)([\d,]+(?:\.\d+)?)\s*$/i) || l.match(/^\s*(T?\d+)[.):\-\s]+(.+?)\s*$/i);
+        if (m) return { rk: m[1], name: m[2], val: m[3] != null ? num(m[3]) : null };
+        const m2 = l.match(/^(.+?)\s*[-–—:,]?\s+([\d,]+(?:\.\d+)?)\s*$/);
+        if (m2) return { rk: null, name: m2[1], val: num(m2[2]) };
+        return { rk: null, name: l, val: null };
+      });
+    }
+    const ncol = Math.max(...cells.map(c => c.length));
+    if (nameCol < 0) { // column with the most letters
+      let best = -1; for (let c = 0; c < ncol; c++) { const sc = cells.reduce((a, r) => a + ((r[c] || '').match(/[a-z]/gi) || []).length, 0); if (sc > best) { best = sc; nameCol = c; } }
+    }
+    if (rankCol < 0 && nameCol > 0) { const c0 = cells.map(r => num((r[0] || '').replace(/^t/i, ''))); if (c0.every(v => v !== null && Number.isInteger(v) && v > 0)) rankCol = 0; }
+    for (let c = ncol - 1; c >= 0; c--) { if (c === nameCol || c === rankCol) continue; if (cells.filter(r => num(r[c]) !== null).length >= cells.length * .8) { valCol = c; break; } }
+    return cells.map(r => ({ rk: rankCol >= 0 ? r[rankCol] : null, name: (r[nameCol] || '').replace(/\s*\*+$/, '').replace(/\s+HOF$/i, ''), val: valCol >= 0 ? num(r[valCol]) : (r[valCol] ?? null) }));
+  }
+  function rowsFromParsed(items) {
+    items = items.filter(x => x.name);
+    let rows;
+    const haveRank = items.every(x => x.rk && /^T?\d+$/i.test(x.rk));
+    const haveVal = items.every(x => x.val !== null && x.val !== undefined);
+    if (haveRank) rows = items.map(x => { const t = /^t/i.test(x.rk); const n = parseInt(x.rk.replace(/^t/i, '')); return { rank: n, dr: (t ? 'T' : '') + n, name: x.name, val: x.val ?? '' }; });
+    else if (haveVal) { rows = items.map(x => ({ name: x.name, val: x.val })).sort((a, b) => b.val - a.val); PP.rankRows(rows); rows.forEach(r => r.dr = r.dr); }
+    else rows = items.map((x, i) => ({ rank: i + 1, dr: String(i + 1), name: x.name, val: x.val ?? '' }));
+    // mark ties for given ranks
+    if (haveRank) { const c = {}; rows.forEach(r => c[r.rank] = (c[r.rank] || 0) + 1); rows.forEach(r => { if (c[r.rank] > 1) r.dr = 'T' + r.rank; }); }
+    rows.sort((a, b) => a.rank - b.rank);
+    return rows;
+  }
+  $('upFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; $('upText').value = await f.text(); if (!$('upTitle').value) $('upTitle').value = f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '); };
+  function uploadedList() {
+    const rows = rowsFromParsed(parseList($('upText').value));
+    if (!rows.length) { flash('Couldn\'t find any players in that list.', 'warn'); return null; }
+    return { title: $('upTitle').value.trim() || 'Custom list', label: $('upLabel').value.trim(), sub: $('upSub').value.trim(), size: rows.length, rows, full: null, src: 'upload' };
+  }
+  $('upGo').onclick = () => { const L = uploadedList(); if (L) setList(L); };
+  $('upSave').onclick = () => { const L = uploadedList(); if (L) saveToLibrary(L); };
+
+  // library
+  function saveToLibrary(L) {
+    const lib = LS.get('library', []);
+    const item = { title: L.title, label: L.label, sub: L.sub, size: L.size, spec: L.spec || null, rows: L.spec ? null : L.rows.map(r => [r.rank, r.dr, r.name, r.val]), saved: new Date().toISOString().slice(0, 10) };
+    const i = lib.findIndex(x => x.title === item.title); if (i >= 0) lib[i] = item; else lib.unshift(item);
+    LS.set('library', lib); renderLibrary(); flash(`Saved <b>${PP.esc(L.title)}</b> to this browser's library.`, 'hit');
+  }
+  function fromStored(x) {
+    if (x.spec) { const L = listFromSpec(x.spec, x.title); L.label = x.label || L.label; L.sub = x.sub || L.sub; return L; }
+    return { title: x.title, label: x.label, sub: x.sub, size: x.size, rows: x.rows.map(([rank, dr, name, val]) => ({ rank, dr, name, val })), full: null, src: 'saved' };
+  }
+  function renderLibrary() {
+    const lib = LS.get('library', []);
+    $('savedList').innerHTML = lib.length ? lib.map((x, i) => `<div class="row"><button style="flex:1;text-align:left" data-load="${i}">${PP.esc(x.title)} <span style="color:var(--dim)">· ${x.spec ? 'built' : (x.rows || []).length + ' rows'}</span></button><button class="sm" data-del="${i}">✕</button></div>`).join('') : 'No saved lists yet. Upload or build a list, then hit Save.';
+    $('savedList').querySelectorAll('[data-load]').forEach(b => b.onclick = () => setList(fromStored(lib[+b.dataset.load])));
+    $('savedList').querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (!confirm('Delete "' + lib[+b.dataset.del].title + '" from the library?')) return; lib.splice(+b.dataset.del, 1); LS.set('library', lib); renderLibrary(); });
+  }
+  $('saveCur').onclick = () => G.list ? saveToLibrary(G.list) : flash('No list loaded.', 'warn');
+  $('exportCsv').onclick = () => {
+    if (!G.list) return flash('No list loaded.', 'warn');
+    const csv = 'rank,name,value\n' + G.list.rows.map(r => `${r.dr},"${r.name.replace(/"/g, '""')}",${r.val}`).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = G.list.title.replace(/[^\w]+/g, '_') + '.csv'; a.click();
+  };
+  ['tTitle', 'tLabel', 'tSub'].forEach(id => $(id).addEventListener('input', () => {
+    if (!G.list) return; G.list.title = $('tTitle').value; G.list.label = $('tLabel').value; G.list.sub = $('tSub').value;
+    if (G.card) G.card = Object.assign({}, G.card, { id: G.card.id }); publish(); renderKeyMeta();
+  }));
+  document.querySelectorAll('#srcTabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#srcTabs button').forEach(x => x.classList.toggle('act', x === b));
+    document.querySelectorAll('.pane').forEach(p => p.classList.toggle('act', p.dataset.p === b.dataset.t));
+  });
+
+  // ── contestants ─────────────────────────────────────────────────────────
+  function savePlayers() { LS.set('players', G.players.map(p => ({ name: p.name, color: p.color }))); }
+  function renderPlayersEd() {
+    $('playersEd').innerHTML = G.players.map((p, i) => `<div class="player"><span class="num">${i + 1}</span><input type="text" value="${PP.esc(p.name)}" data-pn="${i}"><input type="color" value="${p.color}" data-pc="${i}"></div>`).join('');
+    $('playersEd').querySelectorAll('[data-pn]').forEach(inp => inp.oninput = () => { G.players[+inp.dataset.pn].name = inp.value.trim() || 'Player ' + (+inp.dataset.pn + 1); savePlayers(); renderLive(); publish(); });
+    $('playersEd').querySelectorAll('[data-pc]').forEach(inp => inp.oninput = () => { G.players[+inp.dataset.pc].color = inp.value; savePlayers(); renderLive(); renderKey(); publish(); });
+  }
+  $('addP').onclick = () => { if (G.players.length >= 5) return; const i = G.players.length; G.players.push({ name: 'Player ' + (i + 1), color: PP.PLAYER_COLORS[i], score: 0, strikes: 0, out: false }); savePlayers(); renderPlayersEd(); renderAll(); publish(); };
+  $('remP').onclick = () => { if (G.players.length <= 1) return; G.players.pop(); if (G.turn >= G.players.length) G.turn = 0; savePlayers(); renderPlayersEd(); renderAll(); publish(); };
+  $('strikes').value = String(G.maxStrikes); $('order').value = G.order; $('themeMode').value = G.themeMode;
+  $('strikes').onchange = () => { G.maxStrikes = +$('strikes').value; LS.set('strikes', G.maxStrikes); G.players.forEach(p => p.out = G.maxStrikes > 0 && p.strikes >= G.maxStrikes); renderAll(); publish(); };
+  $('order').onchange = () => { G.order = $('order').value; LS.set('order', G.order); };
+  $('themeMode').onchange = () => { G.themeMode = $('themeMode').value; LS.set('themeMode', G.themeMode); if (G.card) { G.card = Object.assign({}, G.card, { theme: theme(), id: G.card.id + 0.5 }); } publish(); };
+  function resetGame(silent) {
+    if (!silent && !confirm('Reset scores and strikes and clear the board?')) return;
+    G.players.forEach(p => { p.score = 0; p.strikes = 0; p.out = false; });
+    G.turn = 0; G.dir = 1; G.guesses = []; G.misses = []; G.card = null; G.cardN = 0; undoStack.length = 0;
+    if (G.list) G.list.rows.forEach(r => { r.found = null; r.rv = false; });
+    G.show.board = false;
+    $('log').innerHTML = ''; renderAll(); publish();
+    if (!silent) flash('New game — scores reset.', 'hit');
+  }
+  $('newGame').onclick = () => resetGame(false);
+
+  // ── turn order ──────────────────────────────────────────────────────────
+  const alive = i => G.players[i] && !G.players[i].out;
+  function advance() {
+    const n = G.players.length;
+    if (!G.players.some((p, i) => alive(i))) return;
+    if (G.order === 'snake' && n > 1) {
+      const step = from => { let i = from + G.dir; while (i >= 0 && i < n && !alive(i)) i += G.dir; return i; };
+      let i = step(G.turn);
+      if (i < 0 || i >= n) { G.dir = -G.dir; i = alive(G.turn) ? G.turn : step(G.turn); if (i < 0 || i >= n) { G.dir = -G.dir; i = step(G.turn); } }
+      G.turn = i;
+    } else { let i = G.turn, k = 0; do { i = (i + 1) % n; } while (!alive(i) && ++k < n); G.turn = i; }
+  }
+  function setTurn(i) { G.turn = (i + G.players.length) % G.players.length; renderLive(); publish(); }
+
+  // ── guessing ────────────────────────────────────────────────────────────
+  function findOnList(q) {
+    const L = G.list; if (!L) return { none: true };
+    const k = PP.norm(q), kh = PP.normHy(q);
+    let m = L.rows.filter(r => r.k === k || r.kh === kh);
+    if (m.length === 1) return { row: m[0] };
+    if (m.length > 1) return { ambig: m };
+    if (!k.includes(' ') && k.length >= 3) {
+      m = L.rows.filter(r => PP.lastName(r.name) === k);
+      if (m.length === 1) return { row: m[0] };
+      if (m.length > 1) return { ambig: m };
+    }
+    return {};
+  }
+  function knownPlayer(q) {
+    const k = PP.norm(q);
+    const fp = FPP.find(p => p.k === k); if (fp) return { name: fp.n, id: fp.id, hs: fp.hs, y0: fp.y0, y1: fp.y1 };
+    const nv = nvMatch(q); if (nv) return { name: nv.n, hs: nv.hs, y0: nv.y0, y1: nv.y1 };
+    return null;
+  }
+  let pendingUnknown = null;
+  function submit(text) {
+    text = (text || '').trim();
+    if (!text) return;
+    if (!G.list) return flash('Load a list first.', 'warn');
+    if (!G.players.some((p, i) => alive(i))) return flash('Everyone is out — start a new game or undo.', 'warn');
+    if (!alive(G.turn)) advance();
+    const f = findOnList(text);
+    if (f.ambig) return flash(`More than one <b>${PP.esc(text)}</b> on the list (${f.ambig.map(r => PP.esc(r.name)).join(', ')}) — be more specific. No strike.`, 'warn');
+    if (f.row) return award(f.row);
+    // not on list
+    const k = PP.norm(text);
+    const kp = knownPlayer(text);
+    const nm = kp ? kp.name : text;
+    if (G.misses.includes(PP.norm(nm))) return flash(`<b>${PP.esc(nm)}</b> was already guessed — no strike.`, 'warn');
+    if (!kp && !pendingUnknown) {
+      pendingUnknown = text;
+      return flash(`<b>${PP.esc(text)}</b> isn't on the list and isn't in the player database (spelling?). Press <b>Enter again</b> to give a strike anyway, or edit the name.`, 'warn');
+    }
+    pendingUnknown = null;
+    strike(nm, kp);
+  }
+  function award(row, who) {
+    who = who ?? G.turn;
+    if (row.found != null) return flash(`<b>${PP.esc(row.name)}</b> was already named by ${PP.esc(G.players[row.found].name)} — no strike.`, 'warn');
+    pushUndo();
+    const p = G.players[who];
+    const pts = row.rank;
+    p.score += pts; row.found = who; row.rv = false;
+    G.guesses.push({ p: who, name: row.name, rank: row.rank, pts, kind: 'hit' });
+    G.cardN++;
+    const pinpoint = row.rank === G.list.maxRank;
+    const rare = !pinpoint && row.rank >= Math.ceil(G.list.size * 0.9);
+    G.card = attachImg({ id: G.cardN, kind: 'hit', name: row.name, val: row.val, rank: row.rank, dr: row.dr, pinpoint, rare, who: p.name, whoColor: p.color, pts, theme: theme() }, row);
+    G.show.card = true;
+    flash(`✓ <b>${PP.esc(row.name)}</b> — #${PP.esc(row.dr)} · ${PP.esc(PP.fmtVal(row.val))} · <b>+${pts}</b> to ${PP.esc(p.name)}${pinpoint ? ' · <b>PINPOINT!</b>' : rare ? ' · rare find' : ''}`, 'hit');
+    log(`✓ ${p.name}: ${row.name} #${row.dr} +${pts}`, 'h');
+    advance(); afterAction();
+  }
+  function strike(name, kp, who) {
+    who = who ?? G.turn;
+    pushUndo();
+    const p = G.players[who];
+    p.strikes++;
+    if (G.maxStrikes > 0 && p.strikes >= G.maxStrikes) p.out = true;
+    if (name) G.misses.push(PP.norm(name));
+    G.guesses.push({ p: who, name: name || '', kind: 'miss' });
+    // where do they actually rank?
+    let rank = null, val = '';
+    if (name && G.list.full) { const k = PP.norm(name); const r = G.list.full.find(x => PP.norm(x.name) === k); if (r) { rank = r.rank; val = r.val; } }
+    G.cardN++;
+    if (name) {
+      G.card = attachImg({ id: G.cardN, kind: 'miss', name, val, rank, who: p.name, whoColor: p.color, theme: theme() }, Object.assign({ name }, kp || {}));
+      G.show.card = true;
+    }
+    flash(`✕ STRIKE ${p.strikes}${G.maxStrikes ? '/' + G.maxStrikes : ''} on ${PP.esc(p.name)}${name ? ` — <b>${PP.esc(name)}</b> ${rank ? `is #${rank} (${PP.esc(PP.fmtVal(val))})` : 'is not on the list'}` : ''}${p.out ? ' — <b>OUT</b>' : ''}`, 'miss');
+    log(`✕ ${p.name}: ${name || 'strike'}${rank ? ' (#' + rank + ')' : ''}${p.out ? ' — OUT' : ''}`, 'm');
+    advance(); afterAction();
+  }
+  function afterAction() {
+    $('gIn').value = ''; hideSugg();
+    renderAll(); publish();
+  }
+  function revealRest() {
+    if (!G.list) return;
+    pushUndo();
+    G.list.rows.forEach(r => { if (r.found == null) r.rv = true; });
+    G.show.board = true; G.show.card = false;
+    log('👁 revealed the rest'); renderAll(); publish();
+  }
+
+  // ── autocomplete ────────────────────────────────────────────────────────
+  const sugg = $('sugg'); let sItems = [], sSel = -1;
+  function hideSugg() { sugg.style.display = 'none'; sItems = []; sSel = -1; }
+  function suggest(q) {
+    const k = PP.norm(q);
+    if (k.length < 2) return hideSugg();
+    const out = [], seen = new Set();
+    const hit = s => s.includes(k) || s.split(' ').some(w => w.startsWith(k));
+    if (G.list) for (const r of G.list.rows) if (hit(r.k) && !seen.has(r.k)) { seen.add(r.k); out.push({ n: r.name, meta: '', tag: r.found != null ? 'dup' : 'on', row: r }); if (out.length >= 5) break; }
+    const pool = [];
+    for (const p of FPP) if (!seen.has(p.k) && hit(p.k)) pool.push({ n: p.n, meta: `${p.pos}, ${p.y0}–${p.y1}`, g: p.y1 - p.y0 + 3, k: p.k });
+    if (pool.length < 12) for (const p of NV) if (!seen.has(p.k) && hit(p.k) && !pool.some(x => x.k === p.k)) { pool.push({ n: p.n, meta: `${p.pos}, ${p.y0}–${p.y1}`, g: p.y1 - p.y0, k: p.k }); if (pool.length > 60) break; }
+    const rel = p => (p.k === k ? 4 : 0) + (PP.lastName(p.n) === k ? 3 : 0) + (p.k.startsWith(k) ? 1 : 0);
+    pool.sort((a, b) => (rel(b) - rel(a)) || (b.g - a.g));
+    for (const p of pool) { if (out.length >= 10) break; if (seen.has(p.k)) continue; seen.add(p.k); out.push({ n: p.n, meta: p.meta, tag: G.misses.includes(p.k) ? 'dup' : 'offl' }); }
+    sItems = out; sSel = out.length ? 0 : -1;
+    if (!out.length) return hideSugg();
+    sugg.innerHTML = out.map((s, i) => `<div data-i="${i}" class="${i === sSel ? 'sel' : ''}"><b>${PP.esc(s.n)}</b><i>${PP.esc(s.meta || (s.row ? '' : ''))}</i>
+      <span class="tag ${s.tag}">${s.tag === 'on' ? '#' + PP.esc(s.row.dr) + ' ON LIST' : s.tag === 'dup' ? 'GUESSED' : 'NOT ON LIST'}</span></div>`).join('');
+    sugg.style.display = 'block';
+    sugg.querySelectorAll('[data-i]').forEach(d => d.onmousedown = e => { e.preventDefault(); pick(+d.dataset.i); });
+  }
+  function pick(i) { const s = sItems[i]; if (!s) return; $('gIn').value = s.n; hideSugg(); pendingUnknown = null; submit(s.n); }
+  const gIn = $('gIn');
+  gIn.addEventListener('input', () => { pendingUnknown = pendingUnknown && PP.norm(gIn.value) === PP.norm(pendingUnknown) ? pendingUnknown : null; suggest(gIn.value); });
+  gIn.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' && sItems.length) { e.preventDefault(); sSel = (sSel + 1) % sItems.length; suggest_hl(); }
+    else if (e.key === 'ArrowUp' && sItems.length) { e.preventDefault(); sSel = (sSel - 1 + sItems.length) % sItems.length; suggest_hl(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (sItems.length && sSel >= 0 && PP.norm(sItems[sSel].n) !== PP.norm(gIn.value) && !pendingUnknown) pick(sSel); else { hideSugg(); submit(gIn.value); } }
+    else if (e.key === 'Escape') { gIn.value = ''; hideSugg(); pendingUnknown = null; }
+    else if (e.key === 'Tab' && sItems.length) { e.preventDefault(); gIn.value = sItems[Math.max(sSel, 0)].n; hideSugg(); }
+  });
+  gIn.addEventListener('blur', () => setTimeout(hideSugg, 150));
+  function suggest_hl() { sugg.querySelectorAll('[data-i]').forEach((d, i) => d.classList.toggle('sel', i === sSel)); }
+
+  // ── controls ────────────────────────────────────────────────────────────
+  const toggles = { bCard: 'card', bScore: 'score', bStrikes: 'strikes', bTurn: 'turn', bTitle: 'title', bBoard: 'board' };
+  Object.entries(toggles).forEach(([id, k]) => $(id).onclick = () => toggle(k));
+  function toggle(k) { G.show[k] = !G.show[k]; LS.set('show', { score: G.show.score, strikes: G.show.strikes, turn: G.show.turn, title: G.show.title }); renderButtons(); publish(); }
+  $('bPrev').onclick = () => setTurn(G.turn - 1);
+  $('bNext').onclick = () => setTurn(G.turn + 1);
+  $('bStrike').onclick = () => { if (!G.list) return flash('Load a list first.', 'warn'); strike(gIn.value.trim() || '', gIn.value.trim() ? knownPlayer(gIn.value) : null); };
+  $('bUndo').onclick = undo;
+  $('bReveal').onclick = () => { if (confirm('Reveal every unnamed player on the board?')) revealRest(); };
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey) return;
+    const m = { c: 'card', s: 'score', x: 'strikes', t: 'turn', b: 'board' }[e.key.toLowerCase()];
+    if (m) { e.preventDefault(); toggle(m); }
+    else if (e.key === 'ArrowLeft') setTurn(G.turn - 1);
+    else if (e.key === 'ArrowRight') setTurn(G.turn + 1);
+    else if (e.key.toLowerCase() === 'u') undo();
+    else if (e.key === '/' || e.key === 'Enter') { e.preventDefault(); gIn.focus(); }
+  });
+
+  // photo override
+  function setCardImg(src) { if (!G.card) return flash('No card on screen.', 'warn'); G.card = Object.assign({}, G.card, { img: src, photo: true, espn: false, hold: false }); imgCache[PP.norm(G.card.name)] = src; LS.set('imgcache', imgCache); publish(); }
+  $('imgApply').onclick = () => { const v = $('imgOverride').value.trim(); if (v) setCardImg(v); $('imgOverride').value = ''; };
+  const pvBox = document.querySelector('.previewbox');
+  pvBox.addEventListener('dragover', e => e.preventDefault());
+  pvBox.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (!f || !f.type.startsWith('image/')) return;
+    const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); const s = Math.min(1, 700 / Math.max(img.width, img.height)); c.width = img.width * s; c.height = img.height * s; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); setCardImg(c.toDataURL('image/jpeg', .85)); }; img.src = URL.createObjectURL(f); });
+
+  // layout sliders
+  const SL = [
+    ['Card', [['cs', 'Size %', 30, 140], ['cx', 'X', -600, 1800], ['cy', 'Y', -600, 1000]]],
+    ['Scoreboard', [['ss', 'Size %', 30, 140], ['sx', 'X', -500, 1900], ['sy', 'Y', -100, 1060]]],
+    ['Strike boxes', [['ks', 'Size %', 30, 140], ['kx', 'Centre X', 0, 1920], ['ky', 'Y', -100, 1060]]],
+    ['Full board', [['bs', 'Size %', 40, 110]]],
+  ];
+  let linkK = LS.get('linkK', true);
+  function setLay(k, v) {
+    v = Math.round(v);
+    const d = v - G.layout[k];
+    G.layout[k] = v;
+    if (linkK && (k === 'sx' || k === 'sy')) G.layout[k === 'sx' ? 'kx' : 'ky'] += d; // strike boxes ride with the scoreboard
+  }
+  function saveLay() { LS.set('layout', G.layout); syncSliders(); publish(); }
+  function renderSliders() {
+    $('layoutSl').innerHTML = SL.map(([g, items]) => `<div class="lbl">${g}</div>` + items.map(([k, l, a, b]) =>
+      `<div class="sl"><span>${l}</span><input type="range" min="${a}" max="${b}" value="${G.layout[k]}" data-k="${k}"><input type="number" value="${G.layout[k]}" data-n="${k}"></div>`).join('')).join('');
+    $('layoutSl').querySelectorAll('input[type=range]').forEach(inp => inp.oninput = () => { setLay(inp.dataset.k, +inp.value); saveLay(); });
+    $('layoutSl').querySelectorAll('input[type=number]').forEach(inp => inp.onchange = () => { setLay(inp.dataset.n, +inp.value || 0); saveLay(); });
+    $('linkK').checked = linkK;
+  }
+  function syncSliders() {
+    $('layoutSl').querySelectorAll('[data-k]').forEach(i => i.value = G.layout[i.dataset.k]);
+    $('layoutSl').querySelectorAll('[data-n]').forEach(i => { if (document.activeElement !== i) i.value = G.layout[i.dataset.n]; });
+  }
+  $('linkK').onchange = () => { linkK = $('linkK').checked; LS.set('linkK', linkK); };
+  $('layReset').onclick = () => { G.layout = Object.assign({}, PP.LAY_DEFAULT); saveLay(); };
+  document.querySelectorAll('[data-csize]').forEach(b => b.onclick = () => { setLay('cs', +b.dataset.csize); saveLay(); });
+  document.querySelectorAll('[data-ssize]').forEach(b => b.onclick = () => {
+    const s = +b.dataset.ssize, f = s / G.layout.ss;
+    // scale the scoreboard and strike boxes together around the scoreboard's top-left
+    G.layout.kx = Math.round(G.layout.sx + (G.layout.kx - G.layout.sx) * f); G.layout.ky = Math.round(G.layout.sy + (G.layout.ky - G.layout.sy) * f);
+    G.layout.ss = s; G.layout.ks = Math.round(G.layout.ks * f); saveLay(); });
+
+  // drag on the preview to move things; scroll wheel over a piece to resize it
+  const pvBoxEl = document.querySelector('.previewbox');
+  const pieceAt = t => t.closest('.pp-cardwrap.on .pp-card') ? 'c' : t.closest('.pp-strikes.on') ? 'k' : (t.closest('.pp-score.on') || t.closest('.pp-title.on')) ? 's' : t.closest('.pp-board.on') ? 'b' : null;
+  const pvScale = () => pvHost.getBoundingClientRect().width / 1920;
+  let drag = null;
+  pvBoxEl.addEventListener('pointerdown', e => {
+    const k = pieceAt(e.target); if (!k || k === 'b') return;
+    e.preventDefault(); pvBoxEl.setPointerCapture(e.pointerId);
+    drag = { k, x: e.clientX, y: e.clientY, ox: G.layout[k + 'x'], oy: G.layout[k + 'y'] };
+    pvBoxEl.classList.add('dragging');
+  });
+  pvBoxEl.addEventListener('pointermove', e => {
+    if (!drag) { const k = pieceAt(e.target); pvBoxEl.style.cursor = k && k !== 'b' ? 'grab' : ''; return; }
+    const sc = pvScale();
+    setLay(drag.k + 'x', drag.ox + (e.clientX - drag.x) / sc);
+    setLay(drag.k + 'y', drag.oy + (e.clientY - drag.y) / sc);
+    if (drag.k === 's' && linkK) { /* setLay already moved the strike boxes by the delta */ }
+    saveLay();
+  });
+  const endDrag = () => { if (drag) { drag = null; pvBoxEl.classList.remove('dragging'); } };
+  pvBoxEl.addEventListener('pointerup', endDrag); pvBoxEl.addEventListener('pointercancel', endDrag);
+  pvBoxEl.addEventListener('wheel', e => {
+    const k = pieceAt(e.target); if (!k) return;
+    e.preventDefault();
+    const key = k + 's';
+    setLay(key, Math.max(30, Math.min(140, G.layout[key] + (e.deltaY < 0 ? 2 : -2)))); saveLay();
+  }, { passive: false });
+
+  // ── render control ──────────────────────────────────────────────────────
+  function renderButtons() { Object.entries(toggles).forEach(([id, k]) => $(id).classList.toggle('on', !!G.show[k])); }
+  function renderLive() {
+    $('plLive').innerHTML = G.players.map((p, i) => `<div class="pl${i === G.turn && !p.out ? ' turn' : ''}${p.out ? ' out' : ''}" style="--pc:${p.color}" data-t="${i}">
+      <div class="nm">${i === G.turn && !p.out ? '▶ ' : ''}${PP.esc(p.name)}</div><div class="sc">${p.score}</div>
+      <div class="xs">${G.maxStrikes ? '✕'.repeat(p.strikes) + '<span style="color:#456">' + '□'.repeat(Math.max(0, G.maxStrikes - p.strikes)) + '</span>' : '✕ ' + p.strikes}</div>
+      <div class="adj"><button data-s="${i}" title="Remove a strike">−✕</button><button data-o="${i}" title="Toggle out">${p.out ? 'in' : 'out'}</button></div></div>`).join('');
+    $('plLive').querySelectorAll('.pl').forEach(d => d.onclick = e => { if (e.target.closest('button')) return; setTurn(+d.dataset.t); });
+    $('plLive').querySelectorAll('[data-s]').forEach(b => b.onclick = () => { const p = G.players[+b.dataset.s]; if (p.strikes > 0) { pushUndo(); p.strikes--; p.out = G.maxStrikes > 0 && p.strikes >= G.maxStrikes; renderAll(); publish(); } });
+    $('plLive').querySelectorAll('[data-o]').forEach(b => b.onclick = () => { pushUndo(); const p = G.players[+b.dataset.o]; p.out = !p.out; renderAll(); publish(); });
+    // game over banner
+    const ob = $('overBanner');
+    const allOut = G.players.every(p => p.out), allFound = G.list && G.list.rows.every(r => r.found != null || r.rv);
+    if (G.list && G.guesses.length && (allOut || allFound)) {
+      const top = Math.max(...G.players.map(p => p.score)); const w = G.players.filter(p => p.score === top);
+      ob.innerHTML = `${allFound ? 'Board cleared' : 'Everyone is out'} — ${w.length > 1 ? 'tie: ' + w.map(p => PP.esc(p.name)).join(' & ') : PP.esc(w[0].name) + ' wins'} with ${top}`;
+      ob.classList.add('on');
+    } else ob.classList.remove('on');
+  }
+  function renderKeyMeta() {
+    const L = G.list; if (!L) return;
+    const total = L.rows.reduce((a, r) => a + r.rank, 0);
+    const got = L.rows.filter(r => r.found != null).length;
+    $('keyMeta').innerHTML = `<b>${PP.esc(L.title)}</b><br>${PP.esc(L.label)} · ${PP.esc(L.sub)} · ${L.rows.length} players · ${total.toLocaleString()} pts on the board`;
+    $('keyCount').textContent = `${got}/${L.rows.length}`;
+  }
+  function renderKey() {
+    const L = G.list;
+    if (!L) { $('key').innerHTML = ''; return; }
+    renderKeyMeta();
+    $('key').innerHTML = L.rows.map((r, i) => `<div class="k${r.found != null ? ' got' : ''}${r.rv ? ' rv' : ''}" data-i="${i}" style="${r.found != null ? '--pc:' + G.players[r.found]?.color : ''}">
+      <span class="r">#${PP.esc(r.dr)}</span><span class="n">${PP.esc(r.name)}</span><span class="v">${PP.esc(PP.fmtVal(r.val))}</span></div>`).join('');
+    $('key').querySelectorAll('.k').forEach(d => d.onclick = () => { const r = L.rows[+d.dataset.i]; if (r.found != null) return flash(`${PP.esc(r.name)} already named.`, 'warn'); award(r); });
+  }
+  function renderAll() { renderLive(); renderKey(); renderButtons(); }
+
+  // ── data refresh (jomboytrivia.com page carries the dataset inline) ──────
+  const idb = (() => { let dbp; const open = () => dbp || (dbp = new Promise((res, rej) => { const r = indexedDB.open('npp', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
+    return { get: k => open().then(db => new Promise(res => { const t = db.transaction('kv').objectStore('kv').get(k); t.onsuccess = () => res(t.result); t.onerror = () => res(null); })).catch(() => null),
+             set: (k, v) => open().then(db => new Promise(res => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = res; })).catch(() => {}) }; })();
+  $('refreshData').onclick = async () => {
+    const b = $('refreshData'); b.disabled = true; b.textContent = 'Downloading (~25 MB)…';
+    try {
+      const html = await (await fetch('https://www.jomboytrivia.com/', { cache: 'no-store' })).text();
+      const m = html.match(/<script[^>]*id="football-pinpoint-data-json"[^>]*>([\s\S]*?)<\/script>/);
+      if (!m) throw new Error('dataset not found on the page');
+      const d = JSON.parse(m[1]);
+      if (!d.offense || !d.playerIndex) throw new Error('unexpected format');
+      d.hs = DS.hs || {};
+      DS = d; await idb.set('fpdata', d); indexDS();
+      flash(`Stats refreshed — data as of <b>${PP.esc(d.meta.dataAsOf2026 || d.meta.generated)}</b>. Reload your list to pick up the new numbers.`, 'hit');
+    } catch (e) { flash('Refresh failed: ' + PP.esc(e.message), 'miss'); }
+    b.disabled = false; b.textContent = 'Refresh stats from jomboytrivia.com';
+  };
+
+  // ── boot ────────────────────────────────────────────────────────────────
+  (async () => {
+    const saved = await idb.get('fpdata');
+    if (saved && saved.meta && (saved.meta.generated || '') > (DSmeta().generated || '')) { saved.hs = Object.assign({}, DS.hs, saved.hs); DS = saved; }
+    indexDS(); fillTeams();
+    $('bY0').value = 2000; $('bY1').value = DSmeta().lastYear;
+    renderPlayersEd(); renderSliders(); renderLibrary(); renderAll(); publish();
+    loadSchedule('fpd');
+    const last = LS.get('lastList', null);
+    if (last) { try { const L = fromStored(last.spec ? last : last); L.src = last.src; setList(L); flash(`Restored last list: <b>${PP.esc(L.title)}</b>. Scores start at zero.`, ''); } catch {} }
+  })();
+})();
+</script>
+</body>
+</html>

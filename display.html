@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NFL Pinpoint — Display</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@700&display=block" rel="stylesheet">
+<link rel="stylesheet" href="pp.css?v=4">
+<style>
+  html, body { margin:0; height:100%; background:transparent; overflow:hidden; }
+  #wrap { position:fixed; inset:0; }
+  #host { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:0 0; }
+  #standby { position:fixed; left:40px; bottom:40px; font:600 22px/1.4 system-ui, sans-serif; color:#fff; background:rgba(10,15,25,.85);
+    border:2px solid #ffd84a; border-radius:12px; padding:14px 20px; max-width:760px; }
+  #standby b { color:#ffd84a; }
+  body.preview { background:#4a5a52 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="20" height="20" fill="%23556"/><rect x="20" y="20" width="20" height="20" fill="%23556"/></svg>'); }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="host"></div></div>
+<div id="standby"></div>
+<script src="pp.js?v=4"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const room = (params.get('room') || 'pinpoint').trim();
+  const hub = PP.hubOf(params);
+  if (params.has('bg')) document.body.classList.add('preview');
+  const host = document.getElementById('host');
+  const stage = PP.createStage(host);
+  PP.fitStage(host);
+  const standby = document.getElementById('standby');
+  standby.innerHTML = `<b>NFL Pinpoint display</b> · room <b>${PP.esc(room)}</b><br>Waiting for the control page… Open the control with the same room and press any button. This note disappears on the first update.`;
+
+  // frozen animation clock → paint end states instead of invisible entrances
+  (() => { let last = -1, stalls = 0; setInterval(() => { const t = document.timeline ? document.timeline.currentTime : performance.now();
+    if (t === last) { if (++stalls >= 2) document.documentElement.classList.add('no-anim'); } else { stalls = 0; document.documentElement.classList.remove('no-anim'); } last = t; }, 700); })();
+
+  let seq = 0;
+  function apply(S) {
+    if (!S || typeof S !== 'object' || !S.seq || S.app !== 'npp') return;
+    if (S.seq <= seq) return;
+    seq = S.seq;
+    standby.style.display = 'none';
+    stage.render(S);
+  }
+  // snapshot fallback: display.html#s=<base64 json>
+  if (location.hash.startsWith('#s=')) { try { apply(JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))))); } catch {} }
+  PP.subscribe(hub, room, apply);
+</script>
+</body>
+</html>

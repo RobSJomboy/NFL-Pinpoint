@@ -1,0 +1,54 @@
+# NFL Pinpoint Challenge — OBS overlays
+
+Control page + OBS display for the Jomboy Media Football "Pinpoint" game, built on the same rules as
+[jomboytrivia.com/#nfl](https://www.jomboytrivia.com/#nfl).
+
+**The game:** a ranked Top-N list (usually 100). Name a player on it and you score his rank — #99 is worth
+99 points, #1 is worth 1, so the deep cuts pay. Name someone who isn't on the list and it's a strike.
+Three strikes and you're out. Naming the very last player on the list is a **PINPOINT**.
+
+## Files
+| file | what |
+|---|---|
+| `index.html` | control page (producer) |
+| `display.html?room=pinpoint` | OBS browser source, 1920×1080, transparent |
+| `pp.js` / `pp.css` | shared list math, renderer, transport |
+| `fpdata.js` | jomboytrivia.com Football Pinpoint stats (QB/RB/WR/TE, 1932→now) + photo ids |
+| `players.js` | every NFL player (nflverse) for photos, search and custom lists |
+
+## Running a show
+1. Open `index.html`. Pick a list:
+   - **Jomboy Trivia**: any NFL Daily (Top 100) or Mini (Top 10) list, pulled live from the site.
+   - **Build**: your own list from the same stats (stat, years, AFC/NFC/teams, positions, Top 10/25/50/100).
+   - **Upload**: paste or drop a CSV, e.g. `rank, name, value`, `name, value` or just names in order.
+     Use this for anything the stats file doesn't cover (sacks, defenders, coaches…). **Save** keeps it in the library.
+2. Set the contestant names and colours, strikes (1/2/3/5/unlimited) and turn order (snake or in order).
+3. **Copy OBS URL** → add a Browser Source, 1920×1080. The control and OBS sync through the Jomboy relay
+   (`room` must match).
+4. Type a name and press Enter. Suggestions show `#73 ON LIST`, `NOT ON LIST` or `GUESSED`.
+   - On the list: the card pops with the photo, value, rank and points, and the score goes up.
+   - Not on the list: a strike box fills and an X card shows where the player actually ranks (e.g. #134).
+   - A misspelled name that isn't in the database asks for a second Enter before it gives a strike.
+   - Already named, or an ambiguous last name: no strike, same as the site.
+5. Clicking a row in the answer key also awards it to whoever is picking.
+
+Keys (outside the text box): `C` card · `S` scoreboard · `X` strike boxes · `T` turn arrow · `B` full board ·
+`←/→` change picker · `U` undo · `Enter` or `/` jumps to the name box.
+
+## Layout
+Open **Layout — sizes & positions** on the control page. Drag the card, scoreboard or strike boxes on the
+preview to move them, scroll over one to resize it, or use the S/M/L/XL buttons and the sliders. The strike
+boxes follow the scoreboard unless you untick that box. Layout is saved in the browser and sent to OBS.
+
+## Photos
+A card never goes on air before its photo has loaded: the control waits up to ~3.5s for a real photo, and the
+display preloads it before drawing. Photos are only ever real ones from NFL.com, ESPN or Wikipedia — nothing is
+generated. If none exists, the card shows a plain silhouette.
+
+NFL.com cutouts first (verified at build time, NFL.com's generic black-helmet placeholder removed), then
+ESPN headshots, then Wikipedia. Paste a URL or drop an image on the preview to replace any card photo.
+The replacement is remembered for that name.
+
+## Refreshing stats
+**Data → Refresh stats from jomboytrivia.com** downloads the site (~25 MB) and keeps the new numbers in
+this browser. Daily lists are always recomputed from the current stats, the same way the site does it.
