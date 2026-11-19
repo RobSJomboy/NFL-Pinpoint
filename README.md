@@ -41,13 +41,13 @@ preview to move them, scroll over one to resize it, or use the S/M/L/XL buttons 
 boxes follow the scoreboard unless you untick that box. Layout is saved in the browser and sent to OBS.
 
 ## Photos
-A card never goes on air before its photo has loaded: the control waits up to ~3.5s for a real photo, and the
-display preloads it before drawing. Photos are only ever real ones from NFL.com, ESPN or Wikipedia — nothing is
-generated. If none exists, the card shows a plain silhouette.
-
-NFL.com cutouts first (verified at build time, NFL.com's generic black-helmet placeholder removed), then
-ESPN headshots, then Wikipedia. Paste a URL or drop an image on the preview to replace any card photo.
-The replacement is remembered for that name.
+- As soon as a list is chosen, every player's photo is found and loaded (control and OBS display both), so cards pop instantly.
+- **Check photos / step through cards** opens Photo check: every player on the list as a card. ← → to move, *Next source*
+  to cycle the real photos available (NFL.com, ESPN, Wikipedia), paste a link, choose or drop a file, switch the fit
+  (cutout / fill the frame), *No photo*, or *Back to automatic*. Red outline = no photo found, green = chosen by you.
+- Every photo found or chosen is saved to this browser's **photo library** and reused next time. Export / import it
+  from the Data section to move it to another computer.
+- A card never airs before its photo loads. Real photos only — nothing is ever generated. No photo = a plain silhouette.
 
 ## Refreshing stats
 **Data → Refresh stats from jomboytrivia.com** downloads the site (~25 MB) and keeps the new numbers in

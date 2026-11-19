@@ -145,22 +145,30 @@ window.PP = (() => {
     const el = { stage: $('.pp-stage'), cardwrap: $('.pp-cardwrap'), card: $('.pp-card'), sbwrap: $('.pp-sbwrap'), kwrap: $('.pp-kwrap'),
       title: $('.pp-title'), score: $('.pp-score'), strikes: $('.pp-strikes'), board: $('.pp-board') };
     let lastCardKey = '', lastScores = {}, lastStrikes = {}, lastBoardKey = '';
-    let latest = null, waitingKey = '';
-    const loaded = new Set();
-    const frames = new Map();
-    const failed = new Set();   // photos that would not load: draw the silhouette, never a broken-image icon   // src -> {x,y,w,h} placement for cutouts, measured from the image's own pixels
-    // Load a photo before the card is drawn, so card and photo always arrive together.
-    // Cutouts are measured on the way in so every player is framed the same: top of the head just
-    // under the top of the oval, head centred left-right, shoulders filling the bottom.
-    const preload = (src, cutout) => new Promise(res => {
-      const im = new Image(); let done = false;
-      const fin = ok => { if (!done) { done = true; clearTimeout(t); res(ok); } };
-      const t = setTimeout(() => fin(false), 4000);
-      if (cutout) im.crossOrigin = 'anonymous';
-      im.onload = () => { if (cutout) { try { const f = frameCutout(im); if (f) frames.set(src, f); } catch {} } fin(true); };  // (no img.decode(): it can hang)
-      im.onerror = () => { if (cutout && im.crossOrigin) { im.onerror = () => fin(false); im.removeAttribute('crossorigin'); im.src = src + ''; } else fin(false); };
-      im.src = src;
-    });
+    let latest = null, waitingKey = '', lastPre = '';
+    const loaded = new Set();   // src+mode that finished loading (ok or not)
+    const frames = new Map();   // src -> {x,y,w,h}: cutout placement measured from the image's own pixels
+    const failed = new Set();   // photos that would not load: draw the silhouette, never a broken-image icon
+    const pending = new Map();  // src+mode -> promise, so a preload and a card share one fetch
+    const PH_W = 740, PH_H = 700; // photo window on the card
+    // Load a photo before the card is drawn, so card and photo always arrive together (no img.decode(): it can hang).
+    function preload(src, cutout) {
+      const k = src + (cutout ? '#c' : '');
+      if (loaded.has(k)) return Promise.resolve(!failed.has(src));
+      if (pending.has(k)) return pending.get(k);
+      const p = new Promise(res => {
+        const im = new Image(); let done = false;
+        const fin = ok => { if (!done) { done = true; clearTimeout(t); pending.delete(k); loaded.add(k); if (!ok) failed.add(src); res(ok); } };
+        const t = setTimeout(() => fin(false), 6000);
+        if (cutout && !/^data:/.test(src)) im.crossOrigin = 'anonymous';
+        im.onload = () => { if (cutout) { try { const f = frameCutout(im); if (f) frames.set(src, f); } catch {} } fin(true); };
+        im.onerror = () => { if (im.crossOrigin) { im.onerror = () => fin(false); im.removeAttribute('crossorigin'); im.src = src; } else fin(false); };
+        im.src = src;
+      });
+      pending.set(k, p);
+      return p;
+    }
+    // Every cutout framed the same way: crown just under the top of the photo window, head centred.
     function frameCutout(im) {
       const W0 = 120, H0 = Math.max(1, Math.round(W0 * im.naturalHeight / im.naturalWidth));
       const cv = document.createElement('canvas'); cv.width = W0; cv.height = H0;
@@ -170,77 +178,86 @@ window.PP = (() => {
       let top = -1;
       for (let y = 0; y < H0 && top < 0; y++) { let n = 0; for (let x = 0; x < W0; x++) if (solid(x, y)) n++; if (n >= 3) top = y; }
       if (top < 0) return null;
-      // head centre = middle of the opaque span a little below the crown
       let sx = 0, sn = 0;
       for (let y = top; y < Math.min(H0, top + Math.round(H0 * 0.18)); y++) for (let x = 0; x < W0; x++) if (solid(x, y)) { sx += x; sn++; }
       const headX = sn ? sx / sn / W0 : 0.5;
       const topF = top / H0;
-      const HEAD_TOP = 92, BOTTOM = 845;                       // card units (oval spans y 52\u2013828)
-      let h = (BOTTOM - HEAD_TOP) / Math.max(0.35, 1 - topF);
-      h = Math.min(h, 1250);
+      const HEAD_TOP = 96, BOTTOM = 760;
+      const h = Math.min((BOTTOM - HEAD_TOP) / Math.max(0.35, 1 - topF), 1250);
       const w = h * im.naturalWidth / im.naturalHeight;
-      return { x: Math.round(370 - headX * w), y: Math.round(HEAD_TOP - topF * h), w: Math.round(w), h: Math.round(h) };
+      return { x: Math.round(PH_W / 2 - headX * w), y: Math.round(HEAD_TOP - topF * h), w: Math.round(w), h: Math.round(h) };
     }
+    // Shrink a line until it fits its box: text is never clipped.
+    function fitText(root) {
+      root.querySelectorAll('[data-fit]').forEach(n => {
+        const max = +n.dataset.fit, min = +(n.dataset.min || 24), box = n.parentElement.clientWidth || +n.dataset.w;
+        let s = max; n.style.fontSize = s + 'px';
+        while (s > min && n.scrollWidth > box) { s -= 2; n.style.fontSize = s + 'px'; }
+      });
+    }
+    if (document.fonts) { document.fonts.ready.then(() => fitText(el.card)); document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', () => fitText(el.card)); }
 
     function renderCard(S) {
       const c = S.card;
       const on = !!(S.show && S.show.card && c && !(S.show.board && S.board));
       if (!c) { el.cardwrap.classList.toggle('on', false); return; }
-      const key = c.id + '|' + (c.img || '');
-      if (key !== lastCardKey && c.img && !loaded.has(c.img + (c.photo ? '' : '#c'))) {
-        // hold the new card off screen until its photo is ready
-        el.cardwrap.classList.remove('on');
-        if (waitingKey !== key) {
-          waitingKey = key;
-          preload(c.img, !c.photo).then(ok => { if (!ok) failed.add(c.img); loaded.add(c.img + (c.photo ? '' : '#c')); if (waitingKey === key) { waitingKey = ''; if (latest) renderCard(latest); } });
-        }
+      const key = c.id + '|' + (c.img || '') + '|' + (c.photo ? 1 : 0) + '|' + (S.cardLabel || '') + '|' + (S.sub || '');
+      const lk = c.img + (c.photo ? '' : '#c');
+      if (key !== lastCardKey && c.img && !loaded.has(lk)) {
+        el.cardwrap.classList.remove('on');           // hold the new card until its photo is ready
+        if (waitingKey !== key) { waitingKey = key; preload(c.img, !c.photo).then(() => { if (waitingKey === key) { waitingKey = ''; if (latest) renderCard(latest); } }); }
         return;
       }
       el.cardwrap.classList.toggle('on', on);
       if (key === lastCardKey) return;
+      const sameId = lastCardKey.split('|')[0] === String(c.id);
       lastCardKey = key;
-      const th = CARD_THEMES[(c.theme || 0) % CARD_THEMES.length];
       const miss = c.kind === 'miss';
-      const nameSize = c.name.length > 20 ? 40 : c.name.length > 16 ? 46 : 54;
-      const fbTop = miss ? (c.rank ? '#' + c.rank : '\u2715') : '#' + (c.dr || c.rank);
-      const fbSub = miss ? (c.rank ? 'Off the list' : 'Not on list') : (S.sub || '');
-      const fbSize = fbTop.length > 4 ? 56 : fbTop.length > 3 ? 64 : 74;
       const src = c.img && !failed.has(c.img) ? c.img : '';
-      const img = !src ? '' : c.photo
-        ? `<image href="${esc(c.img)}" x="55" y="50" width="630" height="780" preserveAspectRatio="xMidYMin slice" clip-path="url(#ppOval${c.id})" ${miss ? 'filter="url(#ppGray)"' : ''}/>`
-        : (f => `<image href="${esc(c.img)}" ${frames.has(c.img) ? 'crossorigin="anonymous"' : ''} x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" preserveAspectRatio="xMidYMin meet" clip-path="url(#ppOval${c.id})" ${miss ? 'filter="url(#ppGray)"' : ''}/>`)(
-            frames.get(c.img) || (c.espn ? { x: -153, y: 116, w: 1046, h: 760 } : { x: -130, y: 15, w: 1000, h: 1000 }));
-      const silhouette = !src ? `<g clip-path="url(#ppOval${c.id})" opacity=".35"><circle cx="370" cy="360" r="130" fill="#0b1a2b"/><path d="M130 840 Q140 560 370 540 Q600 560 610 840Z" fill="#0b1a2b"/></g>` : '';
-      el.card.className = 'pp-card' + (miss ? ' miss' : '') + (c.pinpoint ? ' pinpoint' : '');
+      const gray = miss ? 'filter="url(#jcGray)"' : '';
+      let photo = '';
+      if (src && c.photo) photo = `<image href="${esc(src)}" x="0" y="0" width="${PH_W}" height="${PH_H}" preserveAspectRatio="xMidYMin slice" ${gray}/>`;
+      else if (src) { const f = frames.get(src) || (c.espn ? { x: -170, y: 90, w: 1080, h: 785 } : { x: -150, y: 20, w: 1040, h: 1040 });
+        photo = `<image href="${esc(src)}" ${frames.has(src) && !/^data:/.test(src) ? 'crossorigin="anonymous"' : ''} x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" preserveAspectRatio="xMidYMin meet" ${gray}/>`; }
+      else photo = `<g opacity=".28" fill="#cfe0ee"><circle cx="370" cy="300" r="120"/><path d="M120 720 Q130 470 370 455 Q610 470 620 720Z"/></g>`;
+      const hasVal = c.val !== '' && c.val != null;
+      const statBig = miss && !hasVal ? 'Not on the list' : fmtVal(c.val);
+      const statLbl = miss && !hasVal ? (S.title || '') : (S.cardLabel || '');
+      const rankLbl = miss ? (c.rank ? 'Actual rank' : 'Strike') : (c.dr && c.dr[0] === 'T' ? 'Tied' : 'Rank');
+      const rankBig = miss ? (c.rank ? '#' + c.rank : '\u2715') : '#' + (c.dr || c.rank);
+      const bgNum = miss ? (c.rank || '') : (c.rank || '');
+      el.card.className = 'pp-card jc' + (miss ? ' miss' : '') + (c.pinpoint ? ' pin' : '');
+      el.card.style.setProperty('--pc', c.whoColor || '#fbcc7a');
       el.card.innerHTML = `
-        <svg viewBox="0 0 740 1060" width="740" height="1060">
-          <defs>
-            <clipPath id="ppOval${c.id}"><ellipse cx="370" cy="440" rx="312" ry="388"/></clipPath>
-            <radialGradient id="ppBg${c.id}" cx="50%" cy="38%" r="70%">
-              <stop offset="0" stop-color="#6d8aa6"/><stop offset=".55" stop-color="#34506b"/><stop offset="1" stop-color="#14263a"/>
-            </radialGradient>
-            <filter id="ppGray"><feColorMatrix type="saturate" values="0.05"/><feComponentTransfer><feFuncR type="linear" slope=".8"/><feFuncG type="linear" slope=".8"/><feFuncB type="linear" slope=".8"/></feComponentTransfer></filter>
-          </defs>
-          <rect x="0" y="0" width="740" height="1060" fill="#0a0a0a"/>
-          <rect x="11" y="11" width="718" height="1038" fill="#fff"/>
-          <rect x="30" y="30" width="680" height="1000" rx="26" fill="${th.panel}"/>
-          <ellipse cx="370" cy="440" rx="312" ry="388" fill="url(#ppBg${c.id})"/>
-          ${img}${silhouette}
-          <ellipse cx="370" cy="440" rx="312" ry="388" fill="none" stroke="#0a0a0a" stroke-width="7"/>
-          ${miss ? `<g class="pp-x" stroke-linecap="round"><path d="M175 230 L565 650 M565 230 L175 650" stroke="#0a0a0a" stroke-width="72"/><path d="M175 230 L565 650 M565 230 L175 650" stroke="#e3262f" stroke-width="50"/></g>` : ''}
-          <path d="M34 788 Q300 830 668 752 Q690 748 694 770 L655 968 Q645 990 620 994 Q330 1040 70 1004 Q48 1000 52 980 Q84 900 34 806 Q28 790 34 788Z" fill="${miss ? '#7b7b7b' : th.ban}" stroke="#0a0a0a" stroke-width="7" stroke-linejoin="round"/>
-          <ellipse cx="612" cy="944" rx="132" ry="80" fill="${miss ? '#c3262f' : '#8a4a2a'}" stroke="#0a0a0a" stroke-width="6"/>
-        </svg>
-        <div class="pp-ctext pp-name" style="font-size:${nameSize}px">${esc(c.name)}</div>
-        <div class="pp-ctext pp-val">${miss ? (c.val !== '' && c.val != null ? esc(fmtVal(c.val)) : 'NOT ON THE LIST') : esc(fmtVal(c.val))}</div>
-        <div class="pp-ctext pp-lbl">${esc(miss && (c.val === '' || c.val == null) ? (S.title || '') : (S.cardLabel || ''))}</div>
-        <div class="pp-ctext pp-fb1" style="font-size:${fbSize}px">${esc(fbTop)}</div>
-        <div class="pp-ctext pp-fb2">${esc(fbSub)}</div>
-        ${c.pinpoint ? `<div class="pp-pin"><span>Best possible answer</span>PINPOINT!</div>` : ''}
-        ${c.rare && !c.pinpoint ? `<div class="pp-rare">Rare find</div>` : ''}
-        ${c.who ? `<div class="pp-who" style="--pc:${esc(c.whoColor || '#fff')}">${esc(c.who)}${miss ? ' \u00b7 STRIKE' : ' +' + esc(c.pts)}</div>` : ''}`;
-      // restart entrance animation
-      el.card.classList.remove('enter'); void el.card.offsetWidth; el.card.classList.add('enter');
+        <div class="jc-photo">
+          <div class="jc-stripes"></div>
+          <div class="jc-bgnum">${esc(bgNum)}</div>
+          <svg class="jc-img" viewBox="0 0 ${PH_W} ${PH_H}" width="${PH_W}" height="${PH_H}">
+            <defs><filter id="jcGray"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="linear" slope=".75"/><feFuncG type="linear" slope=".75"/><feFuncB type="linear" slope=".75"/></feComponentTransfer></filter></defs>
+            ${photo}
+          </svg>
+          <div class="jc-fade"></div>
+          <div class="jc-top"><span class="jc-mark">Pinpoint</span><span class="jc-sub">${esc([S.sub, S.size ? 'Top ' + S.size : ''].filter(Boolean).join(' \u00b7 '))}</span></div>
+          ${c.who ? `<div class="jc-who">${esc(c.who)}<b>${miss ? 'Strike' : '+' + esc(c.pts)}</b></div>` : ''}
+          ${c.rare && !c.pinpoint ? `<div class="jc-rare">Rare find</div>` : ''}
+          ${miss ? `<svg class="jc-x" viewBox="0 0 100 100"><path d="M22 22 L78 78 M78 22 L22 78" stroke="#e3262f" stroke-width="11" stroke-linecap="round"/></svg>` : ''}
+          ${c.pinpoint ? `<div class="jc-pin"><span>Best possible answer</span>PINPOINT</div>` : ''}
+        </div>
+        <div class="jc-info">
+          <div class="jc-namebox"><div class="jc-name" data-fit="118" data-min="54">${esc(c.name)}</div></div>
+          <div class="jc-rule"></div>
+          <div class="jc-row">
+            <div class="jc-stat"><div class="jc-statbox"><b data-fit="${miss && !hasVal ? 84 : 124}" data-min="40">${esc(statBig)}</b></div><i>${esc(statLbl)}</i></div>
+            <div class="jc-rank"><i>${esc(rankLbl)}</i><b data-fit="96" data-min="44">${esc(rankBig)}</b></div>
+          </div>
+        </div>`;
+      fitText(el.card);
+      if (!sameId) { el.card.classList.remove('enter'); void el.card.offsetWidth; el.card.classList.add('enter'); }
+    }
+    // warm a whole list of photos (display does this as soon as a list is chosen)
+    async function preloadAll(items) {
+      let i = 0; const run = async () => { while (i < items.length) { const it = items[i++]; await preload(it.img, !it.photo); } };
+      await Promise.all(Array.from({ length: 4 }, run));
     }
 
     function renderScore(S) {
@@ -301,6 +318,7 @@ window.PP = (() => {
     function render(S) {
       if (!S) return;
       latest = S;
+      if (S.pre && S.pre.length) { const k = S.pre.map(x => x.img).join('|'); if (k !== lastPre) { lastPre = k; preloadAll(S.pre); } }
       applyLayout(S);
       renderCard(S);
       renderScore(S);
@@ -308,7 +326,7 @@ window.PP = (() => {
       el.sbwrap.style.opacity = el.kwrap.style.opacity = S.show && S.show.board && S.board ? 0 : 1;
       applyLayout(S);
     }
-    return { el, render };
+    return { el, render, preloadAll, preload, frames };
   }
   const XSVG = `<svg viewBox="0 0 100 100"><path d="M18 18 L82 82 M82 18 L18 82" stroke="#0a0a0a" stroke-width="30" stroke-linecap="round"/><path d="M18 18 L82 82 M82 18 L18 82" stroke="#e3262f" stroke-width="18" stroke-linecap="round"/></svg>`;
 

@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="pp.css?v=5">
+<link rel="stylesheet" href="pp.css?v=6">
 <style>
   :root { --navy:#0d1f2d; --navy2:#13293b; --navy3:#1b3850; --line:#24425c; --gold:#fbcc7a; --ink:#eef3f8; --dim:#9fb2c4; --red:#ff5a5f; --green:#3ddc84; }
   * { box-sizing:border-box; }
@@ -110,6 +110,21 @@
   .over.on { display:block; }
   .scroll-key { max-height:calc(100vh - 260px); overflow:auto; }
   #imgOverride { width:100%; }
+  #phDlg { width:min(1500px,96vw); height:min(940px,94vh); background:var(--navy); color:var(--ink); border:1px solid var(--gold); border-radius:14px; padding:0; }
+  #phDlg::backdrop { background:rgba(0,0,0,.6); }
+  #phDlg[open] { display:flex; flex-direction:column; }
+  .phHead { display:flex; align-items:center; gap:14px; padding:12px 16px; border-bottom:1px solid var(--line); }
+  .phBody { flex:1; min-height:0; display:grid; grid-template-columns:1fr 420px; }
+  .phGrid { overflow:auto; padding:12px; display:grid; grid-template-columns:repeat(auto-fill,minmax(118px,1fr)); gap:8px; align-content:start; }
+  .phT { display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px; border-radius:10px; background:var(--navy2); text-align:center; }
+  .phT img, .phT .q { width:96px; height:96px; object-fit:cover; object-position:top; border-radius:8px; background:#163a57; display:flex; align-items:center; justify-content:center; font-size:28px; color:var(--dim); }
+  .phT b { font:500 11px 'DM Mono'; color:var(--dim); } .phT .nm { font-size:12px; line-height:1.2; }
+  .phT.sel { border-color:var(--gold); box-shadow:0 0 0 2px var(--gold) inset; }
+  .phT.none { border-color:var(--red); } .phT.man { border-color:var(--green); } .phT.wait { opacity:.5; }
+  .phSide { border-left:1px solid var(--line); padding:14px; overflow:auto; display:flex; flex-direction:column; gap:8px; }
+  .phBox { position:relative; width:370px; height:530px; margin:0 auto; overflow:hidden; border-radius:16px; }
+  .phBox.drop { outline:3px dashed var(--gold); outline-offset:4px; }
+  #phHost { position:absolute; left:0; top:0; width:1920px; height:1080px; transform:scale(.5); transform-origin:0 0; }
 </style>
 </head>
 <body>
@@ -178,6 +193,10 @@
       <div id="savedList" class="hint">No saved lists yet. Upload or build a list, then hit Save.</div>
     </div>
 
+    <h2>Photos</h2>
+    <div class="hint" id="phStatus">Load a list first.</div>
+    <div class="row"><button class="gold" id="phOpen" style="flex:1">Check photos / step through cards</button></div>
+
     <h2>On-air text</h2>
     <div class="lbl">List title</div><input type="text" id="tTitle" style="width:100%">
     <div class="row" style="margin-top:6px">
@@ -193,12 +212,13 @@
       <label class="inl">Strikes <select id="strikes"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="5">5</option><option value="0">Unlimited</option></select></label>
       <label class="inl">Order <select id="order"><option value="snake">Snake</option><option value="seq">In order</option></select></label>
     </div>
-    <div class="row"><label class="inl">Card colors <select id="themeMode"><option value="rotate">Rotate each pick</option><option value="0">Cyan / pink</option><option value="1">Yellow / green</option><option value="2">Orange / blue</option><option value="3">Lime / red</option><option value="4">Purple / orange</option><option value="5">Coral / teal</option></select></label></div>
     <div class="row"><button class="gold" id="newGame" style="flex:1">New game (reset scores)</button></div>
 
     <h2>Data</h2>
     <div class="hint" id="dataInfo"></div>
     <button class="sm" id="refreshData">Refresh stats from jomboytrivia.com</button>
+    <div class="hint" id="libInfo" style="margin-top:10px"></div>
+    <div class="row"><button class="sm" id="libExport">Export photo library</button><label class="sm" style="font:500 12px 'DM Sans';cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:4px 8px">Import<input type="file" id="libImport" accept=".json" hidden></label></div>
   </section>
 
   <!-- CENTER: live -->
@@ -228,7 +248,7 @@
     <details>
       <summary>Card photo</summary>
       <div class="row" style="margin-top:8px"><input type="text" id="imgOverride" placeholder="Paste an image URL to replace the current card photo"><button id="imgApply">Apply</button></div>
-      <div class="hint">Photos come from NFL.com cutouts (most players since 1970). Older players fall back to Wikipedia. You can also drop an image file onto the preview.</div>
+      <div class="hint">Replaces the photo on the card that's up now and saves it for next time. You can also drop an image file onto the preview. Real photos only — NFL.com, ESPN, Wikipedia or yours.</div>
     </details>
     <details open>
       <summary>Layout — sizes &amp; positions</summary>
@@ -253,10 +273,26 @@
     <div class="log" id="log"></div>
   </section>
 </main>
+<dialog id="phDlg">
+  <div class="phHead"><h2 style="margin:0">Photo check</h2><span class="hint" style="margin:0">Step through every card before the show. ← → to move. Anything you change is saved for next time.</span><span class="grow"></span>
+    <label class="inl"><input type="checkbox" id="phOnlyMissing"> Only players without a photo</label><button id="phClose" class="gold">Done</button></div>
+  <div class="phBody">
+    <div class="phGrid" id="phGrid"></div>
+    <div class="phSide">
+      <div class="phBox" id="phBox"><div id="phHost"></div></div>
+      <div id="phInfo" class="hint" style="font-size:14px;color:var(--ink)"></div>
+      <div class="row"><button id="phPrev">◀ Prev</button><button id="phNext" style="flex:1">Next ▶</button></div>
+      <div class="row"><button id="phSource" style="flex:1">Next source</button><button id="phFit">Fit</button></div>
+      <div class="row"><input type="text" id="phUrl" placeholder="Paste an image link"><button id="phUrlGo">Use</button></div>
+      <div class="row"><label style="flex:1;text-align:center;border:1px dashed var(--line);border-radius:8px;padding:7px;cursor:pointer">Choose a file… (or drop one on the card)<input type="file" id="phFile" accept="image/*" hidden></label></div>
+      <div class="row"><button id="phNone" style="flex:1">No photo</button><button id="phReset" style="flex:1">Back to automatic</button></div>
+    </div>
+  </div>
+</dialog>
 
-<script src="pp.js?v=5"></script>
-<script src="fpdata.js?v=5"></script>
-<script src="players.js?v=5"></script>
+<script src="pp.js?v=6"></script>
+<script src="fpdata.js?v=6"></script>
+<script src="players.js?v=6"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -323,7 +359,7 @@
   function payload() {
     const L = G.list;
     return {
-      app: 'npp', show: G.show, card: G.card && G.card.hold ? null : G.card, turn: G.turn, maxStrikes: G.maxStrikes, layout: G.layout,
+      app: 'npp', pre: G.pre || [], show: G.show, card: G.card && G.card.hold ? null : G.card, turn: G.turn, maxStrikes: G.maxStrikes, layout: G.layout,
       players: G.players.map(p => ({ name: p.name, color: p.color, score: p.score, strikes: p.strikes, out: p.out })),
       title: L ? L.title : '', sub: L ? L.sub : '', cardLabel: L ? L.label : '', size: L ? L.size : '',
       board: G.show.board && L ? L.rows.map(r => ({ r: r.dr, n: r.found != null || r.rv ? r.name : '', v: r.found != null || r.rv ? r.val : '', c: r.found != null ? G.players[r.found]?.color : '', rv: !!r.rv && r.found == null })) : null,
@@ -352,8 +388,14 @@
   function log(msg, cls) { const d = document.createElement('div'); d.className = cls || ''; d.textContent = msg; $('log').prepend(d); }
   const theme = () => G.themeMode === 'rotate' ? G.cardN % PP.CARD_THEMES.length : +G.themeMode;
 
-  // headshot resolution
-  const imgCache = LS.get('imgcache', {});
+  // ── photos ──────────────────────────────────────────────────────────────
+  // Real photos only: NFL.com cutouts, ESPN headshots, Wikipedia, or one the producer supplies. Never generated.
+  // Every photo found or chosen is saved to this browser's photo library (IndexedDB) and reused next time.
+  let PHOTOS = {};                       // normName -> {img, photo(fill), espn, by:'auto'|'manual'|'none', src}
+  let libT = 0;
+  const libSave = () => { clearTimeout(libT); libT = setTimeout(() => idb.set('photos', PHOTOS), 400); };
+  const libGet = name => PHOTOS[PP.norm(name)] || null;
+  function libSet(name, rec) { PHOTOS[PP.norm(name)] = rec; libSave(); }
   function nvMatch(name, y0, y1) {
     const c = NVbyName.get(PP.norm(name)) || NVbyName.get(PP.normHy(name)) || [];
     if (!c.length) return null;
@@ -362,11 +404,9 @@
     return (ov.length ? ov : c).sort((a, b) => (b.y1 - b.y0) - (a.y1 - a.y0))[0];
   }
   function fpByName(name) { const k = PP.norm(name); return FPP.filter(p => p.k === k).sort((a, b) => (b.y1 - b.y0) - (a.y1 - a.y0))[0] || null; }
-  // candidate photo codes, best first
-  function imgCands(o) {
+  function imgCands(o) {             // candidate photo codes, best first
     const out = [];
     const add = c => { if (c && !out.includes(c)) out.push(c); };
-    add(imgCache[PP.norm(o.name)]);
     add(o.hs);
     const fp = o.id ? FPP.find(p => p.id === o.id) : fpByName(o.name);
     if (fp) add(fp.hs);
@@ -374,29 +414,10 @@
     if (nv) { add(nv.hs); add(nv.espn && 'e' + nv.espn); }
     return out;
   }
-  const probe = src => new Promise(res => { const im = new Image(); const t = setTimeout(() => res(false), 2000);
+  const probe = src => new Promise(res => { const im = new Image(); const t = setTimeout(() => res(false), 3000);
     im.onload = () => { clearTimeout(t); res(im.naturalWidth > 2); }; im.onerror = () => { clearTimeout(t); res(false); }; im.src = src; });
-  const imgFields = code => ({ img: PP.headshotUrl(code), photo: /^https?:|^data:/.test(code), espn: code[0] === 'e' });
-  // Fill the card's photo. NFL.com codes are pre-checked at build time so they go straight to air;
-  // anything else is probed here first so a dead link never reaches OBS.
-  function attachImg(card, o) {
-    const cands = imgCands(o);
-    if (cands[0] && /^[up]/.test(cands[0])) return Object.assign(card, imgFields(cands[0]));
-    // Hold the card back (scores still update) until the photo is found, so it goes on air with its photo.
-    // Real photos only (NFL.com, ESPN, Wikipedia). If none exists in ~3.5s the card airs with the plain silhouette.
-    card.img = ''; card.hold = true;
-    const find = (async () => {
-      for (const c of cands) { const f = imgFields(c); if (await probe(f.img)) return f; }
-      const w = await wikiImg(card.name); return w && await probe(w) ? { img: w, photo: true, espn: false } : null;
-    })();
-    const deadline = new Promise(r => setTimeout(() => r('late'), 3500));
-    Promise.race([find, deadline]).then(f => {
-      if (!G.card || G.card.id !== card.id) return;
-      G.card = Object.assign({}, G.card, f && f !== 'late' ? f : {}, { hold: false }); renderLive(); publish();
-      if (f === 'late') find.then(f2 => { if (f2 && G.card && G.card.id === card.id && !G.card.img) flash(`Found a photo for <b>${PP.esc(card.name)}</b> late — <a href="#" id="lateImg" style="color:var(--gold)">put it on the card</a>.`, 'warn'), setTimeout(() => { const a = $('lateImg'); if (a) a.onclick = e => { e.preventDefault(); setCardImg(f2.img); }; }, 0); });
-    });
-    return card;
-  }
+  const srcName = u => !u ? 'none' : /^data:/.test(u) ? 'your file' : /nfl\.com/.test(u) ? 'NFL.com' : /espncdn/.test(u) ? 'ESPN' : /wiki/.test(u) ? 'Wikipedia' : (u.match(/^https?:\/\/([^/]+)/) || [, 'link'])[1];
+  const codeRec = code => ({ img: PP.headshotUrl(code), photo: false, espn: code[0] === 'e' });
   async function wikiImg(name) {
     for (const t of [name + ' (American football)', name]) {
       try {
@@ -411,6 +432,150 @@
     }
     return '';
   }
+  // every real source that actually loads, in order (used by Photo check → Next source)
+  async function allSources(o) {
+    const out = [];
+    for (const c of imgCands(o)) { const r = codeRec(c); if (await probe(r.img)) out.push(r); }
+    const w = await wikiImg(o.name); if (w && await probe(w)) out.push({ img: w, photo: true, espn: false });
+    return out;
+  }
+  async function findPhoto(o) {
+    for (const c of imgCands(o)) { const r = codeRec(c); if (await probe(r.img)) return r; }
+    const w = await wikiImg(o.name); return w && await probe(w) ? { img: w, photo: true, espn: false } : null;
+  }
+  async function resolvePhoto(o) {
+    const have = libGet(o.name); if (have) return have;
+    const r = await findPhoto(o);
+    if (!r) return { img: '', by: 'missing' };
+    const rec = Object.assign(r, { by: 'auto', src: srcName(r.img) });
+    libSet(o.name, rec);
+    return rec;
+  }
+  const applyRec = (card, rec) => Object.assign(card, { img: rec.img || '', photo: !!rec.photo, espn: !!rec.espn });
+  // Fill a card's photo. Known photo (library / list preload) → straight to air. Unknown → hold the card (scores
+  // still update) up to 3.5s while it is found, so it never airs without its photo.
+  function attachImg(card, o) {
+    const rec = (o.ph && o.ph.by !== 'missing' && o.ph) || libGet(o.name);
+    if (rec) return applyRec(card, rec);
+    card.img = ''; card.hold = true;
+    const find = resolvePhoto(o);
+    const deadline = new Promise(r => setTimeout(() => r('late'), 3500));
+    Promise.race([find, deadline]).then(f => {
+      if (!G.card || G.card.id !== card.id) return;
+      G.card = Object.assign(applyRec(Object.assign({}, G.card), f && f !== 'late' ? f : {}), { hold: false }); renderLive(); publish();
+    });
+    return card;
+  }
+
+  // preload every photo on the list as soon as it is chosen
+  let phToken = 0;
+  async function preparePhotos(L) {
+    const my = ++phToken;
+    const rows = L.rows; let i = 0, done = 0;
+    rows.forEach(r => { delete r.ph; });
+    renderPhStatus();
+    const work = async () => {
+      while (i < rows.length) {
+        const r = rows[i++];
+        const rec = await resolvePhoto(r);
+        if (my !== phToken) return;
+        r.ph = rec;
+        if (rec.img) probe(rec.img);               // warm this browser's cache too
+        done++; if (done % 5 === 0 || done === rows.length) renderPhStatus();
+      }
+    };
+    await Promise.all(Array.from({ length: 6 }, work));
+    if (my !== phToken) return;
+    rebuildPre(); renderPhStatus(); publish();
+  }
+  function rebuildPre() {
+    G.pre = G.list ? G.list.rows.filter(r => r.ph && r.ph.img && !/^data:/.test(r.ph.img)).map(r => ({ img: r.ph.img, photo: !!r.ph.photo })) : [];
+  }
+  function renderPhStatus() {
+    const L = G.list, el = $('phStatus'); if (!el) return;
+    if (!L) { el.textContent = 'Load a list first.'; return; }
+    const ready = L.rows.filter(r => r.ph).length, ok = L.rows.filter(r => r.ph && r.ph.img).length, miss = L.rows.filter(r => r.ph && !r.ph.img).length;
+    el.innerHTML = ready < L.rows.length ? `Loading photos… <b>${ready}/${L.rows.length}</b>` : `<b>${ok}/${L.rows.length}</b> photos ready${miss ? ` · <span style="color:var(--red)">${miss} without a photo</span>` : ''}`;
+    if (phOpen) renderPhGrid();
+  }
+
+  // ── Photo check: step through every card before the game ─────────────────
+  let phOpen = false, phIdx = 0, phSrcs = null, phSrcI = 0, phN = 0;
+  const phDlg = $('phDlg');
+  const phHost = $('phHost');
+  const phStage = PP.createStage(phHost);
+  function openPhotoCheck() {
+    if (!G.list) return flash('Load a list first.', 'warn');
+    phOpen = true; phDlg.showModal(); renderPhGrid(); showPh(phIdx < G.list.rows.length ? phIdx : 0);
+  }
+  function phRows() { const only = $('phOnlyMissing').checked; return G.list.rows.map((r, i) => [r, i]).filter(([r]) => !only || (r.ph && !r.ph.img)); }
+  function renderPhGrid() {
+    if (!G.list) return;
+    $('phGrid').innerHTML = phRows().map(([r, i]) => `<button class="phT${i === phIdx ? ' sel' : ''}${!r.ph ? ' wait' : r.ph.img ? (r.ph.by === 'manual' ? ' man' : '') : ' none'}" data-i="${i}">
+      ${r.ph && r.ph.img ? `<img src="${PP.esc(r.ph.img)}" loading="lazy" alt="">` : `<span class="q">${r.ph ? '—' : '…'}</span>`}
+      <b>#${PP.esc(r.dr)}</b><span class="nm">${PP.esc(r.name)}</span></button>`).join('') || '<div class="hint">Every player has a photo.</div>';
+    $('phGrid').querySelectorAll('[data-i]').forEach(b => b.onclick = () => showPh(+b.dataset.i));
+  }
+  function showPh(i) {
+    const L = G.list; if (!L || !L.rows.length) return;
+    phIdx = (i + L.rows.length) % L.rows.length; phSrcs = null; phSrcI = 0;
+    const r = L.rows[phIdx];
+    const rec = r.ph || { img: '' };
+    phN++;
+    phStage.render({ app: 'npp', seq: phN, show: { card: true }, players: [], title: L.title, sub: L.sub, size: L.size, cardLabel: L.label,
+      layout: { cx: 0, cy: 0, cs: 100, sx: 4000, kx: 6000 },
+      card: { id: 'chk' + phN, kind: 'hit', name: r.name, val: r.val, rank: r.rank, dr: r.dr, img: rec.img || '', photo: !!rec.photo, espn: !!rec.espn, pinpoint: r.rank === L.maxRank } });
+    $('phInfo').innerHTML = `<b>#${PP.esc(r.dr)} ${PP.esc(r.name)}</b> · ${phIdx + 1} of ${L.rows.length}<br>Photo: <b>${!r.ph ? 'still looking…' : rec.img ? PP.esc(rec.src || srcName(rec.img)) + (rec.by === 'manual' ? ' (yours)' : '') : rec.by === 'none' ? 'none (you chose the silhouette)' : 'none found'}</b>`;
+    $('phFit').textContent = rec.photo ? 'Fit: fill the frame' : 'Fit: cutout';
+    renderPhGrid();
+    const sel = $('phGrid').querySelector('.sel'); if (sel) sel.scrollIntoView({ block: 'nearest' });
+  }
+  function setRowPhoto(r, rec) {
+    r.ph = rec;
+    if (rec.by === 'auto-reset') { delete PHOTOS[PP.norm(r.name)]; libSave(); r.ph = undefined; resolvePhoto(r).then(x => { r.ph = x; rebuildPre(); publish(); showPh(phIdx); renderPhStatus(); }); return; }
+    libSet(r.name, rec); rebuildPre(); publish(); showPh(phIdx); renderPhStatus();
+    if (G.card && PP.norm(G.card.name) === PP.norm(r.name)) { G.card = applyRec(Object.assign({}, G.card), rec); publish(); }
+  }
+  $('phPrev').onclick = () => showPh(phIdx - 1);
+  $('phNext').onclick = () => showPh(phIdx + 1);
+  $('phClose').onclick = () => { phOpen = false; phDlg.close(); };
+  phDlg.addEventListener('close', () => { phOpen = false; });
+  $('phOnlyMissing').onchange = renderPhGrid;
+  phDlg.addEventListener('keydown', e => { if (e.target.matches('input')) return; if (e.key === 'ArrowLeft') { e.preventDefault(); showPh(phIdx - 1); } if (e.key === 'ArrowRight') { e.preventDefault(); showPh(phIdx + 1); } });
+  $('phSource').onclick = async () => {
+    const r = G.list.rows[phIdx], b = $('phSource');
+    if (!phSrcs) { b.textContent = 'Looking…'; phSrcs = await allSources(r); b.textContent = 'Next source'; phSrcI = phSrcs.findIndex(x => r.ph && x.img === r.ph.img); }
+    if (!phSrcs.length) return flash(`No other real photo found for <b>${PP.esc(r.name)}</b> — paste a link or drop a file.`, 'warn');
+    phSrcI = (phSrcI + 1) % phSrcs.length;
+    const keep = phSrcs; setRowPhoto(r, Object.assign({}, phSrcs[phSrcI], { by: 'manual', src: srcName(phSrcs[phSrcI].img) })); phSrcs = keep;
+  };
+  $('phUrlGo').onclick = async () => {
+    const u = $('phUrl').value.trim(); if (!u) return;
+    if (!await probe(u)) return flash('That link didn\'t load as an image.', 'miss');
+    setRowPhoto(G.list.rows[phIdx], { img: u, photo: true, espn: false, by: 'manual', src: srcName(u) }); $('phUrl').value = '';
+  };
+  $('phFit').onclick = () => { const r = G.list.rows[phIdx]; if (!r.ph || !r.ph.img) return; setRowPhoto(r, Object.assign({}, r.ph, { photo: !r.ph.photo, by: 'manual' })); };
+  $('phNone').onclick = () => setRowPhoto(G.list.rows[phIdx], { img: '', by: 'none' });
+  $('phReset').onclick = () => setRowPhoto(G.list.rows[phIdx], { by: 'auto-reset' });
+  // a dropped file: shrink it, keep transparency, and treat it as a cutout if it has any
+  function fileToRec(f) {
+    return new Promise(res => {
+      const im = new Image(); im.onload = () => {
+        const s = Math.min(1, 800 / Math.max(im.width, im.height)); const c = document.createElement('canvas');
+        c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
+        const x = c.getContext('2d'); x.drawImage(im, 0, 0, c.width, c.height);
+        const d = x.getImageData(0, 0, c.width, c.height).data; let clear = 0; for (let k = 3; k < d.length; k += 400) if (d[k] < 200) clear++;
+        const cut = clear > 3;
+        res({ img: c.toDataURL(cut ? 'image/webp' : 'image/jpeg', .86), photo: !cut, espn: false, by: 'manual', src: 'your file' });
+      }; im.onerror = () => res(null); im.src = URL.createObjectURL(f);
+    });
+  }
+  const phBox = $('phBox');
+  phBox.addEventListener('dragover', e => { e.preventDefault(); phBox.classList.add('drop'); });
+  phBox.addEventListener('dragleave', () => phBox.classList.remove('drop'));
+  phBox.addEventListener('drop', async e => { e.preventDefault(); phBox.classList.remove('drop'); const f = e.dataTransfer.files[0]; if (!f || !f.type.startsWith('image/')) return; const rec = await fileToRec(f); if (rec) setRowPhoto(G.list.rows[phIdx], rec); });
+  $('phFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; const rec = await fileToRec(f); if (rec) setRowPhoto(G.list.rows[phIdx], rec); e.target.value = ''; };
+  $('phOpen').onclick = openPhotoCheck;
   // ── list loading ────────────────────────────────────────────────────────
   function setList(L, keepGame) {
     L.rows.forEach(r => { r.k = PP.norm(r.name); r.kh = PP.normHy(r.name); r.found = null; r.rv = false; });
@@ -420,7 +585,9 @@
     if (!keepGame) resetGame(true);
     LS.set('lastList', { title: L.title, label: L.label, sub: L.sub, size: L.size, src: L.src, spec: L.spec || null, rows: L.spec ? null : L.rows.map(r => [r.rank, r.dr, r.name, r.val]) });
     log(`📋 ${L.title} (${L.rows.length})`);
+    G.pre = [];
     renderAll(); publish();
+    preparePhotos(L);
     flash(`Loaded <b>${PP.esc(L.title)}</b> — ${L.rows.length} players. Type a name to start.`, 'hit');
     setTimeout(() => $('gIn').focus(), 50);
   }
@@ -591,10 +758,9 @@
   }
   $('addP').onclick = () => { if (G.players.length >= 5) return; const i = G.players.length; G.players.push({ name: 'Player ' + (i + 1), color: PP.PLAYER_COLORS[i], score: 0, strikes: 0, out: false }); savePlayers(); renderPlayersEd(); renderAll(); publish(); };
   $('remP').onclick = () => { if (G.players.length <= 1) return; G.players.pop(); if (G.turn >= G.players.length) G.turn = 0; savePlayers(); renderPlayersEd(); renderAll(); publish(); };
-  $('strikes').value = String(G.maxStrikes); $('order').value = G.order; $('themeMode').value = G.themeMode;
+  $('strikes').value = String(G.maxStrikes); $('order').value = G.order;
   $('strikes').onchange = () => { G.maxStrikes = +$('strikes').value; LS.set('strikes', G.maxStrikes); G.players.forEach(p => p.out = G.maxStrikes > 0 && p.strikes >= G.maxStrikes); renderAll(); publish(); };
   $('order').onchange = () => { G.order = $('order').value; LS.set('order', G.order); };
-  $('themeMode').onchange = () => { G.themeMode = $('themeMode').value; LS.set('themeMode', G.themeMode); if (G.card) { G.card = Object.assign({}, G.card, { theme: theme(), id: G.card.id + 0.5 }); } publish(); };
   function resetGame(silent) {
     if (!silent && !confirm('Reset scores and strikes and clear the board?')) return;
     G.players.forEach(p => { p.score = 0; p.strikes = 0; p.out = false; });
@@ -766,12 +932,17 @@
   });
 
   // photo override
-  function setCardImg(src) { if (!G.card) return flash('No card on screen.', 'warn'); G.card = Object.assign({}, G.card, { img: src, photo: true, espn: false, hold: false }); imgCache[PP.norm(G.card.name)] = src; LS.set('imgcache', imgCache); publish(); }
-  $('imgApply').onclick = () => { const v = $('imgOverride').value.trim(); if (v) setCardImg(v); $('imgOverride').value = ''; };
+  function setCardRec(rec) {
+    if (!G.card) return flash('No card on screen.', 'warn');
+    G.card = Object.assign(applyRec(Object.assign({}, G.card), rec), { hold: false });
+    libSet(G.card.name, rec);
+    const r = G.list && G.list.rows.find(x => PP.norm(x.name) === PP.norm(G.card.name)); if (r) { r.ph = rec; rebuildPre(); }
+    publish(); renderPhStatus();
+  }
+  $('imgApply').onclick = async () => { const v = $('imgOverride').value.trim(); if (!v) return; if (!await probe(v)) return flash('That link didn\'t load as an image.', 'miss'); setCardRec({ img: v, photo: true, espn: false, by: 'manual', src: srcName(v) }); $('imgOverride').value = ''; };
   const pvBox = document.querySelector('.previewbox');
   pvBox.addEventListener('dragover', e => e.preventDefault());
-  pvBox.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (!f || !f.type.startsWith('image/')) return;
-    const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); const s = Math.min(1, 700 / Math.max(img.width, img.height)); c.width = img.width * s; c.height = img.height * s; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); setCardImg(c.toDataURL('image/jpeg', .85)); }; img.src = URL.createObjectURL(f); });
+  pvBox.addEventListener('drop', async e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (!f || !f.type.startsWith('image/')) return; const rec = await fileToRec(f); if (rec) setCardRec(rec); });
 
   // layout sliders
   const SL = [
@@ -891,11 +1062,20 @@
     b.disabled = false; b.textContent = 'Refresh stats from jomboytrivia.com';
   };
 
+  // photo library export / import
+  function renderLibInfo() { const n = Object.keys(PHOTOS).length, m = Object.values(PHOTOS).filter(r => r.by === 'manual').length; $('libInfo').textContent = `Photo library: ${n.toLocaleString()} saved (${m} chosen by you).`; }
+  $('libExport').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(PHOTOS)], { type: 'application/json' })); a.download = 'nfl-pinpoint-photos.json'; a.click(); };
+  $('libImport').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const o = JSON.parse(await f.text()); let n = 0; for (const k in o) if (o[k] && typeof o[k] === 'object') { PHOTOS[k] = o[k]; n++; } libSave(); renderLibInfo(); flash(`Imported ${n} photos.`, 'hit'); if (G.list) preparePhotos(G.list); } catch { flash('That file isn\'t a photo library.', 'miss'); } e.target.value = ''; };
+  setInterval(renderLibInfo, 5000);
+
   // ── boot ────────────────────────────────────────────────────────────────
   (async () => {
     const saved = await idb.get('fpdata');
     if (saved && saved.meta && (saved.meta.generated || '') > (DSmeta().generated || '')) { saved.hs = Object.assign({}, DS.hs, saved.hs); DS = saved; }
     indexDS(); fillTeams();
+    PHOTOS = (await idb.get('photos')) || {};
+    const legacy = LS.get('imgcache', {}); Object.keys(legacy).forEach(k => { if (!PHOTOS[k]) PHOTOS[k] = { img: legacy[k], photo: true, espn: false, by: 'manual', src: srcName(legacy[k]) }; });
+    renderLibInfo();
     $('bY0').value = 2000; $('bY1').value = DSmeta().lastYear;
     renderPlayersEd(); renderSliders(); renderLibrary(); renderAll(); publish();
     loadSchedule('fpd');
