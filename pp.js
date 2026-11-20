@@ -128,6 +128,51 @@ window.PP = (() => {
   // card x/y/size \u00b7 scoreboard x/y/size \u00b7 strike boxes centre-x/y/size \u00b7 board size
   const LAY_DEFAULT = { cx: 30, cy: 12, cs: 100, sx: 805, sy: 615, ss: 100, kx: 1350, ky: 819, ks: 100, bs: 100 };
 
+  // \u2500\u2500 Teams: colours + era-correct abbreviations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  const TEAM_COLORS = {
+    ARI:['#97233F','#FFB612'], ATL:['#A71930','#101010'], BAL:['#241773','#9E7C0C'], BUF:['#00338D','#C60C30'], CAR:['#0085CA','#101820'],
+    CHI:['#0B162A','#C83803'], CIN:['#FB4F14','#101010'], CLE:['#311D00','#FF3C00'], DAL:['#003594','#869397'], DEN:['#FB4F14','#002244'],
+    DET:['#0076B6','#B0B7BC'], GB:['#203731','#FFB612'], HOU:['#03202F','#A71930'], IND:['#002C5F','#A2AAAD'], JAX:['#006778','#D7A22A'],
+    KC:['#E31837','#FFB81C'], LAC:['#0080C6','#FFC20E'], LAR:['#003594','#FFA300'], LV:['#101010','#A5ACAF'], MIA:['#008E97','#FC4C02'],
+    MIN:['#4F2683','#FFC62F'], NE:['#002244','#C60C30'], NO:['#101820','#D3BC8D'], NYG:['#0B2265','#A71930'], NYJ:['#125740','#FFFFFF'],
+    PHI:['#004C54','#A5ACAF'], PIT:['#101820','#FFB612'], SEA:['#002244','#69BE28'], SF:['#AA0000','#B3995D'], TB:['#D50A0A','#FF7900'],
+    TEN:['#0C2340','#4B92DB'], WAS:['#5A1414','#FFB612'],
+  };
+  const TEAM_ALIAS = { LA: 'LAR', SD: 'LAC', OAK: 'LV', STL: 'LAR', SL: 'LAR' };
+  const teamColors = code => TEAM_COLORS[TEAM_ALIAS[code] || code] || ['#2b4a63', '#fbcc7a'];
+  // franchise code + season -> what the team was called that year
+  function teamLabel(code, y) {
+    switch (code) {
+      case 'LAC': return y < 1961 ? 'LAC' : y < 2017 ? 'SD' : 'LAC';
+      case 'LV': return y < 1982 ? 'OAK' : y < 1995 ? 'LARd' : y < 2020 ? 'OAK' : 'LV';
+      case 'LAR': return y < 1946 ? 'CLE' : y < 1995 ? 'LA' : y < 2016 ? 'STL' : 'LAR';
+      case 'TEN': return y < 1997 ? 'HOU' : 'TEN';
+      case 'ARI': return y < 1960 ? 'CHI' : y < 1988 ? 'STL' : y < 1994 ? 'PHO' : 'ARI';
+      case 'IND': return y < 1984 ? 'BAL' : 'IND';
+      case 'KC': return y < 1963 ? 'DTX' : 'KC';
+      case 'NE': return y < 1971 ? 'BOS' : 'NE';
+      case 'WAS': return y < 1937 ? 'BOS' : 'WAS';
+      default: return code;
+    }
+  }
+  const yrs = (a, b) => a === b ? String(a) : `${a}\u2013${String(b).slice(-2)}`;
+  // [{t:'SD', y:'2010\u201314', c:[primary,secondary]}...] + the team he played most for
+  function teamStints(DS, id) {
+    const pi = DS.playerIndex.indexOf(id); if (pi < 0) return null;
+    const seasons = DS.offense.filter(r => r[0] === pi && DS.teamIndex[r[1]] !== '2TM').map(r => ({ y: r[2], code: DS.teamIndex[r[1]], g: r[4] }))
+      .sort((a, b) => a.y - b.y);
+    if (!seasons.length) return null;
+    const out = [], games = {};
+    for (const s of seasons) {
+      games[s.code] = (games[s.code] || 0) + s.g;
+      const lab = teamLabel(s.code, s.y), last = out[out.length - 1];
+      if (last && last.t === lab && s.y <= last.y1 + 1) last.y1 = s.y;
+      else out.push({ t: lab, code: s.code, y0: s.y, y1: s.y });
+    }
+    const main = Object.keys(games).sort((a, b) => games[b] - games[a])[0];
+    return { stints: out.map(s => ({ t: s.t, y: yrs(s.y0, s.y1), c: teamColors(s.code) })), main: teamColors(main) };
+  }
+
   // \u2500\u2500 Renderer \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   // state = { seq, show:{card,score,strikes,board,title,turn}, card, players[], turn, maxStrikes, title, sub, size, board, layout, theme }
   function createStage(host) {
@@ -150,7 +195,7 @@ window.PP = (() => {
     const frames = new Map();   // src -> {x,y,w,h}: cutout placement measured from the image's own pixels
     const failed = new Set();   // photos that would not load: draw the silhouette, never a broken-image icon
     const pending = new Map();  // src+mode -> promise, so a preload and a card share one fetch
-    const PH_W = 740, PH_H = 700; // photo window on the card
+    const PH_W = 692, PH_H = 640; // photo window on the card
     // Load a photo before the card is drawn, so card and photo always arrive together (no img.decode(): it can hang).
     function preload(src, cutout) {
       const k = src + (cutout ? '#c' : '');
@@ -182,7 +227,7 @@ window.PP = (() => {
       for (let y = top; y < Math.min(H0, top + Math.round(H0 * 0.18)); y++) for (let x = 0; x < W0; x++) if (solid(x, y)) { sx += x; sn++; }
       const headX = sn ? sx / sn / W0 : 0.5;
       const topF = top / H0;
-      const HEAD_TOP = 96, BOTTOM = 760;
+      const HEAD_TOP = 92, BOTTOM = 700;
       const h = Math.min((BOTTOM - HEAD_TOP) / Math.max(0.35, 1 - topF), 1250);
       const w = h * im.naturalWidth / im.naturalHeight;
       return { x: Math.round(PH_W / 2 - headX * w), y: Math.round(HEAD_TOP - topF * h), w: Math.round(w), h: Math.round(h) };
@@ -217,39 +262,42 @@ window.PP = (() => {
       const gray = miss ? 'filter="url(#jcGray)"' : '';
       let photo = '';
       if (src && c.photo) photo = `<image href="${esc(src)}" x="0" y="0" width="${PH_W}" height="${PH_H}" preserveAspectRatio="xMidYMin slice" ${gray}/>`;
-      else if (src) { const f = frames.get(src) || (c.espn ? { x: -170, y: 90, w: 1080, h: 785 } : { x: -150, y: 20, w: 1040, h: 1040 });
+      else if (src) { const f = frames.get(src) || (c.espn ? { x: -170, y: 80, w: 1040, h: 755 } : { x: -150, y: 15, w: 1000, h: 1000 });
         photo = `<image href="${esc(src)}" ${frames.has(src) && !/^data:/.test(src) ? 'crossorigin="anonymous"' : ''} x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" preserveAspectRatio="xMidYMin meet" ${gray}/>`; }
-      else photo = `<g opacity=".28" fill="#cfe0ee"><circle cx="370" cy="300" r="120"/><path d="M120 720 Q130 470 370 455 Q610 470 620 720Z"/></g>`;
+      else photo = `<g opacity=".35" fill="#0a0a0a"><circle cx="${PH_W / 2}" cy="270" r="118"/><path d="M110 660 Q120 440 ${PH_W / 2} 425 Q${PH_W - 120} 440 ${PH_W - 110} 660Z"/></g>`;
+      const tc = c.tc || ['#2b4a63', '#fbcc7a'];
       const hasVal = c.val !== '' && c.val != null;
       const statBig = miss && !hasVal ? 'Not on the list' : fmtVal(c.val);
       const statLbl = miss && !hasVal ? (S.title || '') : (S.cardLabel || '');
-      const rankLbl = miss ? (c.rank ? 'Actual rank' : 'Strike') : (c.dr && c.dr[0] === 'T' ? 'Tied' : 'Rank');
+      const rankTop = miss ? (c.rank ? 'Actual rank' : 'Strike') : (c.dr && c.dr[0] === 'T' ? 'Tied' : 'Rank');
       const rankBig = miss ? (c.rank ? '#' + c.rank : '\u2715') : '#' + (c.dr || c.rank);
-      const bgNum = miss ? (c.rank || '') : (c.rank || '');
+      const st = (c.teams || []);
+      const shown = st.length > 9 ? st.slice(0, 8) : st;
+      const tags = shown.map((t, i) => `<span class="jt" style="--t1:${esc(t.c[0])};--t2:${esc(t.c[1])};--r:${i % 2 ? 2.5 : -2.5}deg"><b>${esc(t.t)}</b>${esc(t.y)}</span>`).join('')
+        + (st.length > 9 ? `<span class="jt more" style="--r:2deg"><b>+${st.length - 8}</b>more</span>` : '');
+      const star = Array.from({ length: 28 }, (_, i) => { const a = Math.PI * i / 14, r = i % 2 ? 84 : 100; return `${(100 + r * Math.cos(a)).toFixed(1)},${(100 + r * Math.sin(a)).toFixed(1)}`; }).join(' ');
       el.card.className = 'pp-card jc' + (miss ? ' miss' : '') + (c.pinpoint ? ' pin' : '');
-      el.card.style.setProperty('--pc', c.whoColor || '#fbcc7a');
+      el.card.style.setProperty('--pc', c.whoColor || '#ffd84a');
+      el.card.style.setProperty('--t1', miss ? '#5d646b' : tc[0]);
+      el.card.style.setProperty('--t2', miss ? '#9aa1a8' : tc[1]);
       el.card.innerHTML = `
         <div class="jc-photo">
-          <div class="jc-stripes"></div>
-          <div class="jc-bgnum">${esc(bgNum)}</div>
+          <div class="jc-rays"></div><div class="jc-dots"></div>
           <svg class="jc-img" viewBox="0 0 ${PH_W} ${PH_H}" width="${PH_W}" height="${PH_H}">
-            <defs><filter id="jcGray"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="linear" slope=".75"/><feFuncG type="linear" slope=".75"/><feFuncB type="linear" slope=".75"/></feComponentTransfer></filter></defs>
+            <defs><filter id="jcGray"><feColorMatrix type="saturate" values="0"/></filter></defs>
             ${photo}
           </svg>
-          <div class="jc-fade"></div>
-          <div class="jc-top"><span class="jc-mark">Pinpoint</span><span class="jc-sub">${esc([S.sub, S.size ? 'Top ' + S.size : ''].filter(Boolean).join(' \u00b7 '))}</span></div>
-          ${c.who ? `<div class="jc-who">${esc(c.who)}<b>${miss ? 'Strike' : '+' + esc(c.pts)}</b></div>` : ''}
-          ${c.rare && !c.pinpoint ? `<div class="jc-rare">Rare find</div>` : ''}
-          ${miss ? `<svg class="jc-x" viewBox="0 0 100 100"><path d="M22 22 L78 78 M78 22 L22 78" stroke="#e3262f" stroke-width="11" stroke-linecap="round"/></svg>` : ''}
-          ${c.pinpoint ? `<div class="jc-pin"><span>Best possible answer</span>PINPOINT</div>` : ''}
+          ${tags ? `<div class="jc-teams${st.length > 6 ? ' many2' : st.length > 3 ? ' many' : ''}">${tags}</div>` : ''}
+          ${miss ? `<svg class="jc-x" viewBox="0 0 100 100"><path d="M20 20 L80 80 M80 20 L20 80" stroke="#0a0a0a" stroke-width="20" stroke-linecap="round"/><path d="M20 20 L80 80 M80 20 L20 80" stroke="#e3262f" stroke-width="12" stroke-linecap="round"/></svg>` : ''}
+          ${c.pinpoint ? `<div class="jc-pin"><span>Best possible answer</span>PINPOINT!</div>` : ''}
         </div>
+        ${c.who ? `<div class="jc-who">${esc(c.who)} <b>${miss ? 'STRIKE' : '+' + esc(c.pts)}</b></div>` : ''}
+        ${c.rare && !c.pinpoint ? `<div class="jc-rare">Rare find!</div>` : ''}
+        <div class="jc-rank"><svg viewBox="0 0 200 200"><polygon points="${star}"/></svg><div><i>${esc(rankTop)}</i><b data-fit="80" data-min="40" data-w="150">${esc(rankBig)}</b></div></div>
         <div class="jc-info">
-          <div class="jc-namebox"><div class="jc-name" data-fit="118" data-min="54">${esc(c.name)}</div></div>
-          <div class="jc-rule"></div>
-          <div class="jc-row">
-            <div class="jc-stat"><div class="jc-statbox"><b data-fit="${miss && !hasVal ? 84 : 124}" data-min="40">${esc(statBig)}</b></div><i>${esc(statLbl)}</i></div>
-            <div class="jc-rank"><i>${esc(rankLbl)}</i><b data-fit="96" data-min="44">${esc(rankBig)}</b></div>
-          </div>
+          <div class="jc-namebox"><div class="jc-name" data-fit="124" data-min="48">${esc(c.name)}</div></div>
+          <div class="jc-statbox"><b class="jc-val" data-fit="${miss && !hasVal ? 76 : 136}" data-min="40">${esc(statBig)}</b></div>
+          <div class="jc-lbl">${esc(statLbl)}</div>
         </div>`;
       fitText(el.card);
       if (!sameId) { el.card.classList.remove('enter'); void el.card.offsetWidth; el.card.classList.add('enter'); }
@@ -384,5 +432,5 @@ window.PP = (() => {
   }
 
   return { W, H, IDX, STATS, STAT_GROUPS, statValue, norm, normHy, lastName, rankRows, cutTop, computeList, subtitleFor,
-    fmtVal, headshotUrl, esc, CARD_THEMES, PLAYER_COLORS, LAY_DEFAULT, createStage, fitStage, hubOf, publisher, fetchRoom, subscribe };
+    fmtVal, headshotUrl, esc, CARD_THEMES, PLAYER_COLORS, LAY_DEFAULT, createStage, fitStage, TEAM_COLORS, teamColors, teamLabel, teamStints, hubOf, publisher, fetchRoom, subscribe };
 })();

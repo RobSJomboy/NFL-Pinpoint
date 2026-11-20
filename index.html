@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="pp.css?v=7">
+<link rel="stylesheet" href="pp.css?v=8">
 <style>
   :root { --navy:#0d1f2d; --navy2:#13293b; --navy3:#1b3850; --line:#24425c; --gold:#fbcc7a; --ink:#eef3f8; --dim:#9fb2c4; --red:#ff5a5f; --green:#3ddc84; }
   * { box-sizing:border-box; }
@@ -290,9 +290,9 @@
   </div>
 </dialog>
 
-<script src="pp.js?v=7"></script>
-<script src="fpdata.js?v=7"></script>
-<script src="players.js?v=7"></script>
+<script src="pp.js?v=8"></script>
+<script src="fpdata.js?v=8"></script>
+<script src="players.js?v=8"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -451,6 +451,15 @@
     libSet(o.name, rec);
     return rec;
   }
+  // teams + years he played, and the colours of the team he played most for
+  function teamsFor(o) {
+    const id = o.id || (fpByName(o.name) || {}).id;
+    const st = id && PP.teamStints(DS, id);
+    if (st) return { teams: st.stints, tc: st.main };
+    const nv = nvMatch(o.name, o.y0, o.y1);
+    if (nv && nv.team) { const c = PP.teamColors(nv.team); return { teams: [{ t: nv.team, y: nv.y0 === nv.y1 ? String(nv.y0) : nv.y0 + '\u2013' + String(nv.y1).slice(-2), c }], tc: c }; }
+    return { teams: [], tc: null };
+  }
   const applyRec = (card, rec) => Object.assign(card, { img: rec.img || '', photo: !!rec.photo, espn: !!rec.espn });
   // Fill a card's photo. Known photo (library / list preload) → straight to air. Unknown → hold the card (scores
   // still update) up to 3.5s while it is found, so it never airs without its photo.
@@ -524,7 +533,7 @@
     phN++;
     phStage.render({ app: 'npp', seq: phN, show: { card: true }, players: [], title: L.title, sub: L.sub, size: L.size, cardLabel: L.label,
       layout: { cx: 0, cy: 0, cs: 100, sx: 4000, kx: 6000 },
-      card: { id: 'chk' + phN, kind: 'hit', name: r.name, val: r.val, rank: r.rank, dr: r.dr, img: rec.img || '', photo: !!rec.photo, espn: !!rec.espn, pinpoint: r.rank === L.maxRank } });
+      card: Object.assign({ id: 'chk' + phN, kind: 'hit', name: r.name, val: r.val, rank: r.rank, dr: r.dr, img: rec.img || '', photo: !!rec.photo, espn: !!rec.espn, pinpoint: r.rank === L.maxRank }, teamsFor(r)) });
     $('phInfo').innerHTML = `<b>#${PP.esc(r.dr)} ${PP.esc(r.name)}</b> · ${phIdx + 1} of ${L.rows.length}<br>Photo: <b>${!r.ph ? 'still looking…' : rec.img ? PP.esc(rec.src || srcName(rec.img)) + (rec.by === 'manual' ? ' (yours)' : '') : rec.by === 'none' ? 'none (you chose the silhouette)' : 'none found'}</b>`;
     $('phFit').textContent = rec.photo ? 'Fit: fill the frame' : 'Fit: cutout';
     renderPhGrid();
@@ -839,7 +848,7 @@
     G.cardN++;
     const pinpoint = row.rank === G.list.maxRank;
     const rare = !pinpoint && row.rank >= Math.ceil(G.list.size * 0.9);
-    G.card = attachImg({ id: G.cardN, kind: 'hit', name: row.name, val: row.val, rank: row.rank, dr: row.dr, pinpoint, rare, who: p.name, whoColor: p.color, pts, theme: theme() }, row);
+    G.card = attachImg(Object.assign({ id: G.cardN, kind: 'hit', name: row.name, val: row.val, rank: row.rank, dr: row.dr, pinpoint, rare, who: p.name, whoColor: p.color, pts }, teamsFor(row)), row);
     G.show.card = true;
     flash(`✓ <b>${PP.esc(row.name)}</b> — #${PP.esc(row.dr)} · ${PP.esc(PP.fmtVal(row.val))} · <b>+${pts}</b> to ${PP.esc(p.name)}${pinpoint ? ' · <b>PINPOINT!</b>' : rare ? ' · rare find' : ''}`, 'hit');
     log(`✓ ${p.name}: ${row.name} #${row.dr} +${pts}`, 'h');
@@ -858,7 +867,7 @@
     if (name && G.list.full) { const k = PP.norm(name); const r = G.list.full.find(x => PP.norm(x.name) === k); if (r) { rank = r.rank; val = r.val; } }
     G.cardN++;
     if (name) {
-      G.card = attachImg({ id: G.cardN, kind: 'miss', name, val, rank, who: p.name, whoColor: p.color, theme: theme() }, Object.assign({ name }, kp || {}));
+      G.card = attachImg(Object.assign({ id: G.cardN, kind: 'miss', name, val, rank, who: p.name, whoColor: p.color }, teamsFor(Object.assign({ name }, kp || {}))), Object.assign({ name }, kp || {}));
       G.show.card = true;
     }
     flash(`✕ STRIKE ${p.strikes}${G.maxStrikes ? '/' + G.maxStrikes : ''} on ${PP.esc(p.name)}${name ? ` — <b>${PP.esc(name)}</b> ${rank ? `is #${rank} (${PP.esc(PP.fmtVal(val))})` : 'is not on the list'}` : ''}${p.out ? ' — <b>OUT</b>' : ''}`, 'miss');
