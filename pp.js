@@ -260,10 +260,12 @@ window.PP = (() => {
       const miss = c.kind === 'miss';
       const src = c.img && !failed.has(c.img) ? c.img : '';
       const gray = miss ? 'filter="url(#jcGray)"' : '';
+      const fid = 'jcSh' + String(c.id).replace(/\W/g, '');
+      const shade = `filter="url(#${fid})"`;   // cutouts get a hard drop shadow in the team's second colour
       let photo = '';
       if (src && c.photo) photo = `<image href="${esc(src)}" x="0" y="0" width="${PH_W}" height="${PH_H}" preserveAspectRatio="xMidYMin slice" ${gray}/>`;
       else if (src) { const f = frames.get(src) || (c.espn ? { x: -170, y: 80, w: 1040, h: 755 } : { x: -150, y: 15, w: 1000, h: 1000 });
-        photo = `<image href="${esc(src)}" ${frames.has(src) && !/^data:/.test(src) ? 'crossorigin="anonymous"' : ''} x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" preserveAspectRatio="xMidYMin meet" ${gray}/>`; }
+        photo = `<image href="${esc(src)}" ${frames.has(src) && !/^data:/.test(src) ? 'crossorigin="anonymous"' : ''} x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" preserveAspectRatio="xMidYMin meet" ${shade}/>`; }
       else photo = `<g opacity=".35" fill="#0a0a0a"><circle cx="${PH_W / 2}" cy="270" r="118"/><path d="M110 660 Q120 440 ${PH_W / 2} 425 Q${PH_W - 120} 440 ${PH_W - 110} 660Z"/></g>`;
       const tc = c.tc || ['#2b4a63', '#fbcc7a'];
       const hasVal = c.val !== '' && c.val != null;
@@ -284,7 +286,15 @@ window.PP = (() => {
         <div class="jc-photo">
           <div class="jc-rays"></div><div class="jc-dots"></div>
           <svg class="jc-img" viewBox="0 0 ${PH_W} ${PH_H}" width="${PH_W}" height="${PH_H}">
-            <defs><filter id="jcGray"><feColorMatrix type="saturate" values="0"/></filter></defs>
+            <defs>
+              <filter id="jcGray"><feColorMatrix type="saturate" values="0"/></filter>
+              <filter id="${fid}" x="-20%" y="-20%" width="140%" height="140%">
+                <feColorMatrix in="SourceGraphic" type="saturate" values="${miss ? 0 : 1}" result="g"/>
+                <feOffset in="SourceAlpha" dx="16" dy="10" result="o"/><feFlood flood-color="${esc(miss ? '#2a2f34' : tc[1])}"/><feComposite in2="o" operator="in" result="pop"/>
+                <feGaussianBlur in="SourceAlpha" stdDeviation="7" result="bl"/><feOffset in="bl" dx="-4" dy="8" result="blo"/><feFlood flood-color="#000" flood-opacity=".5"/><feComposite in2="blo" operator="in" result="soft"/>
+                <feMerge><feMergeNode in="pop"/><feMergeNode in="soft"/><feMergeNode in="g"/></feMerge>
+              </filter>
+            </defs>
             ${photo}
           </svg>
           ${tags ? `<div class="jc-teams${st.length > 6 ? ' many2' : st.length > 3 ? ' many' : ''}">${tags}</div>` : ''}
@@ -293,11 +303,13 @@ window.PP = (() => {
         </div>
         ${c.who ? `<div class="jc-who">${esc(c.who)} <b>${miss ? 'STRIKE' : '+' + esc(c.pts)}</b></div>` : ''}
         ${c.rare && !c.pinpoint ? `<div class="jc-rare">Rare find!</div>` : ''}
-        <div class="jc-rank"><svg viewBox="0 0 200 200"><polygon points="${star}"/></svg><div><i>${esc(rankTop)}</i><b data-fit="80" data-min="40" data-w="150">${esc(rankBig)}</b></div></div>
         <div class="jc-info">
           <div class="jc-namebox"><div class="jc-name" data-fit="124" data-min="48">${esc(c.name)}</div></div>
-          <div class="jc-statbox"><b class="jc-val" data-fit="${miss && !hasVal ? 76 : 136}" data-min="40">${esc(statBig)}</b></div>
-          <div class="jc-lbl">${esc(statLbl)}</div>
+          <div class="jc-row">
+            <div class="jc-rank"><svg viewBox="0 0 200 200"><polygon points="${star}"/></svg><div><i>${esc(rankTop)}</i><b data-fit="64" data-min="30" data-w="110">${esc(rankBig)}</b></div></div>
+            <div class="jc-stat"><div class="jc-statbox"><b class="jc-val" data-fit="${miss && !hasVal ? 64 : 120}" data-min="36">${esc(statBig)}</b></div>
+              <div class="jc-lbl">${esc(statLbl)}</div></div>
+          </div>
         </div>`;
       fitText(el.card);
       if (!sameId) { el.card.classList.remove('enter'); void el.card.offsetWidth; el.card.classList.add('enter'); }
