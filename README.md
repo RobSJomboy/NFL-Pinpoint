@@ -40,6 +40,16 @@ OBS: tick *Control audio via OBS* on the browser source to hear them; add `&mute
 Keys (outside the text box): `R` reveal rank · `C` card · `S` scoreboard · `X` strike boxes · `T` turn arrow · `B` full board ·
 `←/→` change picker · `U` undo · `Enter` or `/` jumps to the name box.
 
+## Scoreboard fonts
+Pick the names font and the scores font on the control page. Adobe Fonts (kit `lxl2pkq`): Gothic Open Shaded, Roboto,
+Roboto ExtraLight. **PRIMETIME** (with ten drop shadows) and **Designer** are *not* in this repo — the PRIMETIME licence is
+personal-use only and forbids sharing the file — so install them on the control and OBS computers (double-click → Install).
+The free PRIMETIME has no digits (every number is the Hypefonts logo), so use it for names and Designer for scores.
+
+## Whooshes
+Under the preview, click a numbered chip to choose (and hear) the whoosh for the card coming in and for the rank wipe;
+🔀 picks a different one each time; right-click a chip to just listen.
+
 ## Layout
 Open **Layout — sizes & positions** on the control page. Drag the card, scoreboard or strike boxes on the
 preview to move them, scroll over one to resize it, or use the S/M/L/XL buttons and the sliders. The strike

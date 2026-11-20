@@ -245,12 +245,13 @@ window.PP = (() => {
     // Shrink a line until it fits its box: text is never clipped.
     function fitText(root) {
       root.querySelectorAll('[data-fit]').forEach(n => {
-        const max = +n.dataset.fit, min = +(n.dataset.min || 24), box = n.parentElement.clientWidth || +n.dataset.w;
+        const max = +n.dataset.fit, min = +(n.dataset.min || 24), box = (n.parentElement.clientWidth || +n.dataset.w) - (+n.dataset.pad || 0);
         let s = max; n.style.fontSize = s + 'px';
         while (s > min && n.scrollWidth > box) { s -= 2; n.style.fontSize = s + 'px'; }
       });
     }
-    if (document.fonts) { document.fonts.ready.then(() => fitText(el.card)); document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', () => fitText(el.card)); }
+    const refit = () => { fitText(el.card); fitText(el.score); };
+    if (document.fonts) { document.fonts.ready.then(refit); document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', refit); }
 
     function renderCard(S) {
       const c = S.card;
@@ -360,8 +361,8 @@ window.PP = (() => {
       const turnOn = S.show && S.show.turn;
       el.score.innerHTML = ps.map((p, i) => `
         <div class="pp-col${p.out ? ' out' : ''}${turnOn && S.turn === i && !p.out ? ' turn' : ''}" style="--pc:${esc(p.color)}">
-          <div class="pp-pname" style="font-size:${Math.min(62, Math.floor(1000 / ps.length / Math.max(4, p.name.length) / 0.56))}px">${esc(p.name)}</div>
-          <div class="pp-pscore">${p.score}</div>
+          <div class="pp-pname" data-fit="${ps.length > 3 ? 54 : 66}" data-min="22">${esc(p.name)}</div>
+          <div class="pp-pscore" data-fit="${ps.length > 3 ? 92 : 108}" data-min="40">${p.score}</div>
           ${p.out ? '<div class="pp-out">OUT</div>' : ''}
           ${lastScores[i] != null && p.score > lastScores[i] ? `<div class="pp-plus">+${p.score - lastScores[i]}</div>` : ''}
         </div>`).join('');
@@ -373,6 +374,9 @@ window.PP = (() => {
         return `<div class="pp-scol${p.out ? ' out' : ''}">${boxes}</div>`;
       }).join('');
       ps.forEach((p, i) => { lastScores[i] = p.score; lastStrikes[i] = p.strikes; });
+      const F = S.fonts || {};
+      el.sbwrap.dataset.nf = F.name || 'anton'; el.sbwrap.dataset.sf = F.score || 'anton';
+      fitText(el.score);
     }
 
     function renderBoard(S) {

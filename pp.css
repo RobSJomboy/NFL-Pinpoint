@@ -126,3 +126,28 @@ html.no-anim .pp-stage *, html.no-anim .pp-stage *::before, html.no-anim .pp-sta
 .pp-card.revealed .jc-who b.rv, .pp-card.revealed .jc-rare { animation:jcPop .45s cubic-bezier(.2,1.8,.4,1) .4s both; }
 @keyframes jcPop { 0% { transform:scale(.2); opacity:0; } 100% { transform:none; opacity:1; } }
 .jc-who b { display:inline-block; }
+
+/* ── scoreboard fonts (picked on the control page) ─────────────────────
+   PRIMETIME and Designer are NOT shipped with the app (licence): they load from the fonts installed on the machine. */
+@font-face { font-family:'NPP Primetime'; src:local('PRIMETIME'), local('PRIMETIME Regular'), local('PRIMETIME-Regular'); }
+@font-face { font-family:'NPP Designer'; src:local('Designer'), local('Designer Regular'), local('Designer-Regular'); }
+.pp-pname, .pp-pscore { white-space:nowrap; padding:0 14px; }
+.pp-sbwrap[data-nf="primetime"] .pp-pname { font-family:'NPP Primetime','Anton',sans-serif; }
+.pp-sbwrap[data-nf="designer"] .pp-pname { font-family:'NPP Designer','Anton',sans-serif; text-transform:none; }
+.pp-sbwrap[data-nf="gothic"] .pp-pname { font-family:'gothic-open-shaded','Anton',sans-serif; text-shadow:3px 4px 0 rgba(0,0,0,.3); }
+.pp-sbwrap[data-nf="roboto"] .pp-pname { font-family:'roboto',sans-serif; font-weight:700; }
+.pp-sbwrap[data-nf="roboto-i"] .pp-pname { font-family:'roboto',sans-serif; font-weight:400; font-style:italic; }
+.pp-sbwrap[data-nf="roboto-r"] .pp-pname { font-family:'roboto',sans-serif; font-weight:400; }
+.pp-sbwrap[data-nf="roboto-xl"] .pp-pname { font-family:'roboto-extralight',sans-serif; font-weight:200; }
+.pp-sbwrap[data-nf="roboto-xli"] .pp-pname { font-family:'roboto-extralight',sans-serif; font-weight:200; font-style:italic; }
+.pp-sbwrap[data-sf="primetime"] .pp-pscore { font-family:'NPP Primetime','Anton',sans-serif; }
+.pp-sbwrap[data-sf="designer"] .pp-pscore { font-family:'NPP Designer','Anton',sans-serif; }
+.pp-sbwrap[data-sf="gothic"] .pp-pscore { font-family:'gothic-open-shaded','Anton',sans-serif; }
+.pp-sbwrap[data-sf="roboto"] .pp-pscore { font-family:'roboto',sans-serif; font-weight:700; }
+.pp-sbwrap[data-sf="roboto-i"] .pp-pscore { font-family:'roboto',sans-serif; font-weight:400; font-style:italic; }
+.pp-sbwrap[data-sf="roboto-r"] .pp-pscore { font-family:'roboto',sans-serif; font-weight:400; }
+.pp-sbwrap[data-sf="roboto-xl"] .pp-pscore { font-family:'roboto-extralight',sans-serif; font-weight:200; }
+.pp-sbwrap[data-sf="roboto-xli"] .pp-pscore { font-family:'roboto-extralight',sans-serif; font-weight:200; font-style:italic; }
+/* PRIMETIME gets ten drop shadows (stacked 1px steps = a solid 3D extrusion) */
+.pp-sbwrap[data-nf="primetime"] .pp-pname { text-shadow:3px 0px 0 #3a2410, -3px 0px 0 #3a2410, 0px 3px 0 #3a2410, 0px -3px 0 #3a2410, 2px 2px 0 #3a2410, -2px -2px 0 #3a2410, 2px -2px 0 #3a2410, -2px 2px 0 #3a2410, 3px 3px 0 #3a2410, 4px 4px 0 #3a2410, 5px 5px 0 #3a2410, 6px 6px 0 #3a2410, 7px 7px 0 #3a2410, 8px 8px 0 #3a2410, 9px 9px 0 #3a2410, 10px 10px 0 #3a2410, 11px 11px 0 #3a2410, 12px 12px 0 #3a2410; }
+.pp-sbwrap[data-sf="primetime"] .pp-pscore { text-shadow:4px 0px 0 #0a0a0a, -4px 0px 0 #0a0a0a, 0px 4px 0 #0a0a0a, 0px -4px 0 #0a0a0a, 3px 3px 0 #0a0a0a, -3px -3px 0 #0a0a0a, 3px -3px 0 #0a0a0a, -3px 3px 0 #0a0a0a, 6px 6px 0 #0a0a0a, 7px 7px 0 #0a0a0a, 8px 8px 0 #0a0a0a, 9px 9px 0 #0a0a0a, 10px 10px 0 #0a0a0a, 11px 11px 0 #0a0a0a, 12px 12px 0 #0a0a0a, 13px 13px 0 #0a0a0a, 14px 14px 0 #0a0a0a, 15px 15px 0 #0a0a0a; }

@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <title>NFL Pinpoint — Control</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://use.typekit.net/lxl2pkq.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="pp.css?v=10">
+<link rel="stylesheet" href="pp.css?v=11">
 <style>
   :root { --navy:#0d1f2d; --navy2:#13293b; --navy3:#1b3850; --line:#24425c; --gold:#fbcc7a; --ink:#eef3f8; --dim:#9fb2c4; --red:#ff5a5f; --green:#3ddc84; }
   * { box-sizing:border-box; }
@@ -110,6 +111,12 @@
   .over.on { display:block; }
   .scroll-key { max-height:calc(100vh - 260px); overflow:auto; }
   #imgOverride { width:100%; }
+  .whoosh { background:var(--navy2); border:1px solid var(--line); border-radius:10px; padding:8px 10px; }
+  .wrow { display:flex; align-items:center; gap:8px; margin:3px 0; } .wrow .lbl { margin:0; width:74px; flex:none; }
+  .chips2 { display:flex; flex-wrap:wrap; gap:3px; }
+  .chips2 button { padding:3px 0; width:28px; font:500 11px 'DM Mono'; border-radius:6px; }
+  .chips2 button.sel { background:var(--gold); color:#14202b; border-color:var(--gold); font-weight:700; }
+  .chips2 button.rnd { width:34px; }
   #phDlg { width:min(1500px,96vw); height:min(940px,94vh); background:var(--navy); color:var(--ink); border:1px solid var(--gold); border-radius:14px; padding:0; }
   #phDlg::backdrop { background:rgba(0,0,0,.6); }
   #phDlg[open] { display:flex; flex-direction:column; }
@@ -211,6 +218,11 @@
     <div class="row"><span class="lbl" style="margin:0;width:70px">Card in</span><select id="sfxCard" style="flex:1"><option value="whoosh-01">Whoosh 1</option><option value="whoosh-02">Whoosh 2</option><option value="whoosh-03">Whoosh 3</option><option value="whoosh-04">Whoosh 4</option><option value="whoosh-05">Whoosh 5</option><option value="whoosh-06">Whoosh 6</option><option value="whoosh-07">Whoosh 7</option><option value="whoosh-08">Whoosh 8</option><option value="whoosh-09">Whoosh 9</option><option value="whoosh-10">Whoosh 10</option><option value="whoosh-11">Whoosh 11</option><option value="whoosh-12">Whoosh 12</option><option value="whoosh-13">Whoosh 13</option><option value="whoosh-14">Whoosh 14</option><option value="whoosh-15">Whoosh 15</option><option value="whoosh-16">Whoosh 16</option><option value="whoosh-17">Whoosh 17</option><option value="whoosh-18">Whoosh 18</option><option value="whoosh-19">Whoosh 19</option><option value="whoosh-20">Whoosh 20</option><option value="whoosh-21">Whoosh 21</option><option value="whoosh-22">Whoosh 22</option><option value="whoosh-23">Whoosh 23</option><option value="whoosh-24">Whoosh 24</option><option value="whoosh-25">Whoosh 25</option></select><button class="sm" data-play="sfxCard">▶</button></div>
     <div class="row"><span class="lbl" style="margin:0;width:70px">Rank wipe</span><select id="sfxReveal" style="flex:1"><option value="whoosh-01">Whoosh 1</option><option value="whoosh-02">Whoosh 2</option><option value="whoosh-03">Whoosh 3</option><option value="whoosh-04">Whoosh 4</option><option value="whoosh-05">Whoosh 5</option><option value="whoosh-06">Whoosh 6</option><option value="whoosh-07">Whoosh 7</option><option value="whoosh-08">Whoosh 8</option><option value="whoosh-09">Whoosh 9</option><option value="whoosh-10">Whoosh 10</option><option value="whoosh-11">Whoosh 11</option><option value="whoosh-12">Whoosh 12</option><option value="whoosh-13">Whoosh 13</option><option value="whoosh-14">Whoosh 14</option><option value="whoosh-15">Whoosh 15</option><option value="whoosh-16">Whoosh 16</option><option value="whoosh-17">Whoosh 17</option><option value="whoosh-18">Whoosh 18</option><option value="whoosh-19">Whoosh 19</option><option value="whoosh-20">Whoosh 20</option><option value="whoosh-21">Whoosh 21</option><option value="whoosh-22">Whoosh 22</option><option value="whoosh-23">Whoosh 23</option><option value="whoosh-24">Whoosh 24</option><option value="whoosh-25">Whoosh 25</option></select><button class="sm" data-play="sfxReveal">▶</button></div>
 
+    <h2>Scoreboard fonts</h2>
+    <div class="row"><span class="lbl" style="margin:0;width:70px">Names</span><select id="fName" style="flex:1"><option value="anton">Anton (original)</option><option value="primetime">PRIMETIME (installed) + ten drop shadows</option><option value="designer">Designer (installed)</option><option value="gothic">Gothic Open Shaded</option><option value="roboto">Roboto Bold</option><option value="roboto-r">Roboto</option><option value="roboto-i">Roboto Italic</option><option value="roboto-xl">Roboto ExtraLight</option><option value="roboto-xli">Roboto ExtraLight Italic</option></select></div>
+    <div class="row"><span class="lbl" style="margin:0;width:70px">Scores</span><select id="fScore" style="flex:1"><option value="anton">Anton (original)</option><option value="primetime">PRIMETIME (installed) + ten drop shadows</option><option value="designer">Designer (installed)</option><option value="gothic">Gothic Open Shaded</option><option value="roboto">Roboto Bold</option><option value="roboto-r">Roboto</option><option value="roboto-i">Roboto Italic</option><option value="roboto-xl">Roboto ExtraLight</option><option value="roboto-xli">Roboto ExtraLight Italic</option></select></div>
+    <div class="hint" id="fontWarn">PRIMETIME gets ten drop shadows. PRIMETIME and Designer have to be <b>installed</b> on this computer and the OBS computer (double-click the font file → Install) — they aren't bundled.</div>
+
     <h2>Contestants</h2>
     <div id="playersEd"></div>
     <div class="row"><button class="sm" id="addP">+ Add</button><button class="sm" id="remP">− Remove</button></div>
@@ -252,6 +264,11 @@
       <button id="bReveal">Reveal rest</button>
     </div>
     <div class="previewbox"><div id="pvHost"></div></div>
+    <div class="whoosh">
+      <div class="wrow"><span class="lbl">Card in</span><div class="chips2" id="wCard"></div></div>
+      <div class="wrow"><span class="lbl">Rank wipe</span><div class="chips2" id="wReveal"></div></div>
+      <div class="hint" style="margin:2px 0 0">Click a whoosh to hear it here and use it for the next card / wipe. 🔀 picks a different one every time. Right-click to hear without choosing.</div>
+    </div>
     <details>
       <summary>Card photo</summary>
       <div class="row" style="margin-top:8px"><input type="text" id="imgOverride" placeholder="Paste an image URL to replace the current card photo"><button id="imgApply">Apply</button></div>
@@ -297,9 +314,9 @@
   </div>
 </dialog>
 
-<script src="pp.js?v=10"></script>
-<script src="fpdata.js?v=10"></script>
-<script src="players.js?v=10"></script>
+<script src="pp.js?v=11"></script>
+<script src="fpdata.js?v=11"></script>
+<script src="players.js?v=11"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -339,6 +356,7 @@
     maxStrikes: LS.get('strikes', 3), order: LS.get('order', 'snake'), themeMode: LS.get('themeMode', 'rotate'),
     turn: 0, dir: 1, guesses: [], misses: [], card: null, cardN: 0,
     revealMode: LS.get('revealMode', 'manual'), pending: null,
+    fonts: Object.assign({ name: 'primetime', score: 'designer' }, LS.get('fonts', {})),
     sfx: Object.assign({ on: true, vol: 80, card: 'whoosh-01', reveal: 'whoosh-07' }, LS.get('sfx', {})),
     show: Object.assign({ card:true, score:true, strikes:true, turn:true, title:false, board:false }, LS.get('show', {})),
     layout: Object.assign({}, PP.LAY_DEFAULT, LS.get('layout', {})),
@@ -370,7 +388,7 @@
     return {
       app: 'npp', pre: G.pre || [], show: G.show, card: G.card && G.card.hold ? null : G.card, turn: G.turn, maxStrikes: G.maxStrikes, layout: G.layout,
       players: G.players.map((p, i) => ({ name: p.name, color: p.color, score: p.score - (G.pending && G.pending.who === i ? G.pending.pts : 0), strikes: p.strikes, out: p.out })),
-      sfx: G.sfx,
+      sfx: G.sfx, fonts: G.fonts,
       title: L ? L.title : '', sub: L ? L.sub : '', cardLabel: L ? L.label : '', size: L ? L.size : '',
       board: G.show.board && L ? L.rows.map(r => ({ r: r.dr, n: r.found != null || r.rv ? r.name : '', v: r.found != null || r.rv ? r.val : '', c: r.found != null ? G.players[r.found]?.color : '', rv: !!r.rv && r.found == null })) : null,
     };
@@ -859,6 +877,7 @@
     G.cardN++;
     const pinpoint = row.rank === G.list.maxRank;
     const rare = !pinpoint && row.rank >= Math.ceil(G.list.size * 0.9);
+    shuffleSfx('card'); shuffleSfx('reveal');
     const shown = G.revealMode === 'instant';
     G.card = attachImg(Object.assign({ id: G.cardN, kind: 'hit', name: row.name, val: row.val, rank: row.rank, dr: row.dr, pinpoint, rare, who: p.name, whoColor: p.color, pts, rankShown: shown }, teamsFor(row)), row);
     G.show.card = true;
@@ -874,6 +893,7 @@
     who = who ?? G.turn;
     pushUndo();
     G.pending = null;
+    shuffleSfx('card');
     const p = G.players[who];
     p.strikes++;
     if (G.maxStrikes > 0 && p.strikes >= G.maxStrikes) p.out = true;
@@ -948,10 +968,43 @@
   $('revealMode').value = G.revealMode;
   $('revealMode').onchange = () => { G.revealMode = $('revealMode').value; LS.set('revealMode', G.revealMode); };
   $('sfxOn').checked = G.sfx.on; $('sfxVol').value = G.sfx.vol; $('sfxCard').value = G.sfx.card; $('sfxReveal').value = G.sfx.reveal;
-  const saveSfx = () => { G.sfx = { on: $('sfxOn').checked, vol: +$('sfxVol').value, card: $('sfxCard').value, reveal: $('sfxReveal').value }; LS.set('sfx', G.sfx); publish(); };
+  const saveSfx = () => { G.sfx = Object.assign({}, G.sfx, { on: $('sfxOn').checked, vol: +$('sfxVol').value, card: $('sfxCard').value, reveal: $('sfxReveal').value }); LS.set('sfx', G.sfx); publish(); if (typeof renderWhoosh === 'function') renderWhoosh(); };
   ['sfxOn', 'sfxVol', 'sfxCard', 'sfxReveal'].forEach(id => $(id).addEventListener('change', saveSfx));
   document.querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const a = new Audio('sfx/' + $(b.dataset.play).value + '.m4a'); a.volume = +$('sfxVol').value / 100; a.play().catch(() => {}); });
   $('bRank').onclick = revealRank;
+  // fonts
+  $('fName').value = G.fonts.name; $('fScore').value = G.fonts.score;
+  const saveFonts = () => { G.fonts = { name: $('fName').value, score: $('fScore').value }; LS.set('fonts', G.fonts); publish(); checkFonts(); };
+  $('fName').onchange = saveFonts; $('fScore').onchange = saveFonts;
+  function checkFonts() {
+    if (!document.fonts || !document.fonts.check) return;
+    const miss = [['primetime', 'NPP Primetime', 'PRIMETIME'], ['designer', 'NPP Designer', 'Designer']]
+      .filter(([k, fam]) => (G.fonts.name === k || G.fonts.score === k) && !document.fonts.check(`40px "${fam}"`));
+    const ptScore = G.fonts.score === 'primetime';
+    $('fontWarn').style.color = miss.length || ptScore ? 'var(--red)' : '';
+    if (ptScore && !miss.length) { $('fontWarn').innerHTML = '<b>The free PRIMETIME has no numbers</b> — every digit is the Hypefonts "HF" logo. Use it for names, and Designer (or another font) for scores, unless you have the full PRIMETIME.'; return; }
+    $('fontWarn').innerHTML = miss.length ? `<b>${miss.map(m => m[2]).join(' and ')} isn't installed on this computer</b> — the scoreboard falls back to Anton. Double-click the font file → Install, on this computer and the OBS computer, then reload.`
+      : 'PRIMETIME gets ten drop shadows. PRIMETIME and Designer load from the fonts installed on this computer and the OBS computer — they aren\'t bundled.';
+  }
+  document.fonts && document.fonts.load('40px "NPP Primetime"').then(checkFonts, checkFonts); document.fonts && document.fonts.load('40px "NPP Designer"').then(checkFonts, checkFonts);
+  // whoosh chips under the preview
+  const WN = Array.from({ length: 25 }, (_, i) => 'whoosh-' + String(i + 1).padStart(2, '0'));
+  const hear = n => { const a = new Audio('sfx/' + n + '.m4a'); a.volume = (G.sfx.vol ?? 80) / 100; a.play().catch(() => {}); };
+  function renderWhoosh() {
+    [['wCard', 'card'], ['wReveal', 'reveal']].forEach(([id, k]) => {
+      const rnd = G.sfx[k + 'Rnd'];
+      $(id).innerHTML = WN.map((n, i) => `<button data-n="${n}" class="${!rnd && G.sfx[k] === n ? 'sel' : ''}">${i + 1}</button>`).join('') + `<button class="rnd${rnd ? ' sel' : ''}" data-rnd="1" title="Different whoosh every time">🔀</button>`;
+      $(id).querySelectorAll('button').forEach(b => {
+        b.onclick = () => { if (b.dataset.rnd) G.sfx[k + 'Rnd'] = !G.sfx[k + 'Rnd']; else { G.sfx[k] = b.dataset.n; G.sfx[k + 'Rnd'] = false; hear(b.dataset.n); } syncSfxUI(); };
+        b.oncontextmenu = e => { e.preventDefault(); if (b.dataset.n) hear(b.dataset.n); };
+      });
+    });
+  }
+  function syncSfxUI() { LS.set('sfx', G.sfx); $('sfxCard').value = G.sfx.card; $('sfxReveal').value = G.sfx.reveal; renderWhoosh(); publish(); }
+  ['sfxCard', 'sfxReveal'].forEach(id => $(id).addEventListener('change', () => { G.sfx.cardRnd = G.sfx.revealRnd = false; renderWhoosh(); }));
+  // shuffle: pick a fresh whoosh before each card / wipe goes out
+  function shuffleSfx(k) { if (!G.sfx[k + 'Rnd']) return; let n; do { n = WN[Math.floor(Math.random() * WN.length)]; } while (n === G.sfx[k] && WN.length > 1); G.sfx = Object.assign({}, G.sfx, { [k]: n }); renderWhoosh(); }
+  renderWhoosh();
 
   // ── controls ────────────────────────────────────────────────────────────
   const toggles = { bCard: 'card', bScore: 'score', bStrikes: 'strikes', bTurn: 'turn', bTitle: 'title', bBoard: 'board' };
