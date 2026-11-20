@@ -126,7 +126,41 @@ window.PP = (() => {
   const PLAYER_COLORS = ['#f7a35c', '#f45fb5', '#f6e04a', '#5cc8ff', '#7be07b'];
 
   // card x/y/size \u00b7 scoreboard x/y/size \u00b7 strike boxes centre-x/y/size \u00b7 board size
-  const LAY_DEFAULT = { cx: 30, cy: 12, cs: 100, sx: 805, sy: 615, ss: 100, kx: 1350, ky: 819, ks: 100, bs: 100 };
+  const LAY_DEFAULT = { cx: 30, cy: 12, cs: 100, sx: 805, sy: 615, ss: 100, kx: 1350, ky: 819, ks: 100, bs: 100, sn: 100, snm: 100 };
+
+  // \u2500\u2500 Fonts: every on-screen text element has its own font, chosen on the control page \u2500\u2500
+  // PRIMETIME + Designer load from fonts installed on the machine (not shipped); the rest are Google / Adobe (kit lxl2pkq).
+  const FONTS = {
+    anton:       ['Anton',                    "'Anton',sans-serif", 400, 'normal'],
+    bebas:       ['Bebas Neue',               "'Bebas Neue','Anton',sans-serif", 400, 'normal'],
+    archivo:     ['Archivo Narrow Bold',      "'Archivo Narrow',sans-serif", 700, 'normal'],
+    dmsans:      ['DM Sans Bold',             "'DM Sans',sans-serif", 700, 'normal'],
+    primetime:   ['PRIMETIME + ten drop shadows (installed)', "'NPP Primetime','Anton',sans-serif", 400, 'normal'],
+    designer:    ['Designer (installed)',     "'NPP Designer','Anton',sans-serif", 400, 'normal'],
+    gothic:      ['Gothic Open Shaded',       "'gothic-open-shaded','Anton',sans-serif", 400, 'normal'],
+    roboto:      ['Roboto Bold',              "'roboto',sans-serif", 700, 'normal'],
+    'roboto-r':  ['Roboto',                   "'roboto',sans-serif", 400, 'normal'],
+    'roboto-i':  ['Roboto Italic',            "'roboto',sans-serif", 400, 'italic'],
+    'roboto-xl': ['Roboto ExtraLight',        "'roboto-extralight',sans-serif", 200, 'normal'],
+    'roboto-xli':['Roboto ExtraLight Italic', "'roboto-extralight',sans-serif", 200, 'italic'],
+  };
+  // [key, label, default, group]
+  const FONT_SLOTS = [
+    ['scoreName', 'Contestant names', 'primetime', 'Scoreboard'],
+    ['score', 'Scores', 'designer', 'Scoreboard'],
+    ['pop', '+points pop & OUT stamp', 'anton', 'Scoreboard'],
+    ['title', 'List title bar', 'anton', 'Scoreboard'],
+    ['cardName', 'Player name', 'anton', 'Card'],
+    ['cardVal', 'Stat number', 'anton', 'Card'],
+    ['cardLbl', 'Small labels (stat, RANK)', 'dmsans', 'Card'],
+    ['rank', 'Rank number', 'anton', 'Card'],
+    ['teams', 'Team & years tags', 'anton', 'Card'],
+    ['who', 'Contestant tag & Rare find', 'anton', 'Card'],
+    ['pin', 'PINPOINT banner', 'anton', 'Card'],
+    ['boardHead', 'Board title', 'anton', 'Full board'],
+    ['board', 'Board names', 'archivo', 'Full board'],
+  ];
+  const fontDefaults = () => Object.fromEntries(FONT_SLOTS.map(f => [f[0], f[2]]));
 
   // \u2500\u2500 Teams: colours + era-correct abbreviations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   const TEAM_COLORS = {
@@ -359,10 +393,11 @@ window.PP = (() => {
       el.title.classList.toggle('on', !!(S.show && S.show.title && S.title));
       el.title.innerHTML = `<b>${esc(S.title || '')}</b>${S.size ? `<i>Top ${esc(S.size)}</i>` : ''}`;
       const turnOn = S.show && S.show.turn;
+      const LL = Object.assign({}, LAY_DEFAULT, S.layout || {}), scScale = (LL.sn || 100) / 100, nmScale = (LL.snm || 100) / 100;
       el.score.innerHTML = ps.map((p, i) => `
         <div class="pp-col${p.out ? ' out' : ''}${turnOn && S.turn === i && !p.out ? ' turn' : ''}" style="--pc:${esc(p.color)}">
-          <div class="pp-pname" data-fit="${ps.length > 3 ? 54 : 66}" data-min="22">${esc(p.name)}</div>
-          <div class="pp-pscore" data-fit="${ps.length > 3 ? 92 : 108}" data-min="40">${p.score}</div>
+          <div class="pp-pname" data-fit="${Math.round((ps.length > 3 ? 54 : 66) * nmScale)}" data-min="16">${esc(p.name)}</div>
+          <div class="pp-pscore" data-fit="${Math.round((ps.length > 3 ? 92 : 108) * scScale)}" data-min="24">${p.score}</div>
           ${p.out ? '<div class="pp-out">OUT</div>' : ''}
           ${lastScores[i] != null && p.score > lastScores[i] ? `<div class="pp-plus">+${p.score - lastScores[i]}</div>` : ''}
         </div>`).join('');
@@ -374,8 +409,6 @@ window.PP = (() => {
         return `<div class="pp-scol${p.out ? ' out' : ''}">${boxes}</div>`;
       }).join('');
       ps.forEach((p, i) => { lastScores[i] = p.score; lastStrikes[i] = p.strikes; });
-      const F = S.fonts || {};
-      el.sbwrap.dataset.nf = F.name || 'anton'; el.sbwrap.dataset.sf = F.score || 'anton';
       fitText(el.score);
     }
 
@@ -399,6 +432,20 @@ window.PP = (() => {
         </div>`;
     }
 
+    let fontSig = '';
+    function applyFonts(S) {
+      const F = Object.assign(fontDefaults(), S.fonts || {});
+      if (S.fonts && S.fonts.name && !S.fonts.scoreName) F.scoreName = S.fonts.name;   // older control pages
+      const sig = JSON.stringify(F); if (sig === fontSig) return; fontSig = sig;
+      const st = el.stage.style;
+      FONT_SLOTS.forEach(([k]) => {
+        const d = FONTS[F[k]] || FONTS.anton;
+        st.setProperty('--ff-' + k, d[1]); st.setProperty('--fw-' + k, d[2]); st.setProperty('--fs-' + k, d[3]);
+        if (F[k] === 'primetime') el.stage.setAttribute('data-fx-' + k.toLowerCase(), ''); else el.stage.removeAttribute('data-fx-' + k.toLowerCase());
+        if (document.fonts && document.fonts.load) document.fonts.load(`${d[3]} ${d[2]} 40px ${d[1].split(',')[0]}`).then(refit, () => {});
+      });
+      refit();
+    }
     function applyLayout(S) {
       const L = Object.assign({}, LAY_DEFAULT, S.layout || {});
       el.cardwrap.style.transform = `translate(${L.cx}px,${L.cy}px) scale(${L.cs / 100})`;
@@ -410,6 +457,7 @@ window.PP = (() => {
     function render(S) {
       if (!S) return;
       latest = S; sfxCfg = S.sfx || null;
+      applyFonts(S);
       if (opts.sound && sfxCfg) ['card', 'reveal'].forEach(k => { const n = sfxCfg[k]; if (n && !audio[n]) { const au = new Audio('sfx/' + n + '.m4a'); au.preload = 'auto'; audio[n] = au; } });
       if (S.pre && S.pre.length) { const k = S.pre.map(x => x.img).join('|'); if (k !== lastPre) { lastPre = k; preloadAll(S.pre); } }
       applyLayout(S);
@@ -477,5 +525,5 @@ window.PP = (() => {
   }
 
   return { W, H, IDX, STATS, STAT_GROUPS, statValue, norm, normHy, lastName, rankRows, cutTop, computeList, subtitleFor,
-    fmtVal, headshotUrl, esc, CARD_THEMES, PLAYER_COLORS, LAY_DEFAULT, createStage, fitStage, TEAM_COLORS, teamColors, teamLabel, teamStints, hubOf, publisher, fetchRoom, subscribe };
+    fmtVal, headshotUrl, esc, CARD_THEMES, PLAYER_COLORS, LAY_DEFAULT, createStage, fitStage, FONTS, FONT_SLOTS, fontDefaults, TEAM_COLORS, teamColors, teamLabel, teamStints, hubOf, publisher, fetchRoom, subscribe };
 })();

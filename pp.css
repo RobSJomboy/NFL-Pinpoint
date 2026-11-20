@@ -132,22 +132,30 @@ html.no-anim .pp-stage *, html.no-anim .pp-stage *::before, html.no-anim .pp-sta
 @font-face { font-family:'NPP Primetime'; src:local('PRIMETIME'), local('PRIMETIME Regular'), local('PRIMETIME-Regular'); }
 @font-face { font-family:'NPP Designer'; src:local('Designer'), local('Designer Regular'), local('Designer-Regular'); }
 .pp-pname, .pp-pscore { white-space:nowrap; padding:0 14px; }
-.pp-sbwrap[data-nf="primetime"] .pp-pname { font-family:'NPP Primetime','Anton',sans-serif; }
-.pp-sbwrap[data-nf="designer"] .pp-pname { font-family:'NPP Designer','Anton',sans-serif; text-transform:none; }
-.pp-sbwrap[data-nf="gothic"] .pp-pname { font-family:'gothic-open-shaded','Anton',sans-serif; text-shadow:3px 4px 0 rgba(0,0,0,.3); }
-.pp-sbwrap[data-nf="roboto"] .pp-pname { font-family:'roboto',sans-serif; font-weight:700; }
-.pp-sbwrap[data-nf="roboto-i"] .pp-pname { font-family:'roboto',sans-serif; font-weight:400; font-style:italic; }
-.pp-sbwrap[data-nf="roboto-r"] .pp-pname { font-family:'roboto',sans-serif; font-weight:400; }
-.pp-sbwrap[data-nf="roboto-xl"] .pp-pname { font-family:'roboto-extralight',sans-serif; font-weight:200; }
-.pp-sbwrap[data-nf="roboto-xli"] .pp-pname { font-family:'roboto-extralight',sans-serif; font-weight:200; font-style:italic; }
-.pp-sbwrap[data-sf="primetime"] .pp-pscore { font-family:'NPP Primetime','Anton',sans-serif; }
-.pp-sbwrap[data-sf="designer"] .pp-pscore { font-family:'NPP Designer','Anton',sans-serif; }
-.pp-sbwrap[data-sf="gothic"] .pp-pscore { font-family:'gothic-open-shaded','Anton',sans-serif; }
-.pp-sbwrap[data-sf="roboto"] .pp-pscore { font-family:'roboto',sans-serif; font-weight:700; }
-.pp-sbwrap[data-sf="roboto-i"] .pp-pscore { font-family:'roboto',sans-serif; font-weight:400; font-style:italic; }
-.pp-sbwrap[data-sf="roboto-r"] .pp-pscore { font-family:'roboto',sans-serif; font-weight:400; }
-.pp-sbwrap[data-sf="roboto-xl"] .pp-pscore { font-family:'roboto-extralight',sans-serif; font-weight:200; }
-.pp-sbwrap[data-sf="roboto-xli"] .pp-pscore { font-family:'roboto-extralight',sans-serif; font-weight:200; font-style:italic; }
-/* PRIMETIME gets ten drop shadows (stacked 1px steps = a solid 3D extrusion) */
-.pp-sbwrap[data-nf="primetime"] .pp-pname { text-shadow:3px 0px 0 #3a2410, -3px 0px 0 #3a2410, 0px 3px 0 #3a2410, 0px -3px 0 #3a2410, 2px 2px 0 #3a2410, -2px -2px 0 #3a2410, 2px -2px 0 #3a2410, -2px 2px 0 #3a2410, 3px 3px 0 #3a2410, 4px 4px 0 #3a2410, 5px 5px 0 #3a2410, 6px 6px 0 #3a2410, 7px 7px 0 #3a2410, 8px 8px 0 #3a2410, 9px 9px 0 #3a2410, 10px 10px 0 #3a2410, 11px 11px 0 #3a2410, 12px 12px 0 #3a2410; }
-.pp-sbwrap[data-sf="primetime"] .pp-pscore { text-shadow:4px 0px 0 #0a0a0a, -4px 0px 0 #0a0a0a, 0px 4px 0 #0a0a0a, 0px -4px 0 #0a0a0a, 3px 3px 0 #0a0a0a, -3px -3px 0 #0a0a0a, 3px -3px 0 #0a0a0a, -3px 3px 0 #0a0a0a, 6px 6px 0 #0a0a0a, 7px 7px 0 #0a0a0a, 8px 8px 0 #0a0a0a, 9px 9px 0 #0a0a0a, 10px 10px 0 #0a0a0a, 11px 11px 0 #0a0a0a, 12px 12px 0 #0a0a0a, 13px 13px 0 #0a0a0a, 14px 14px 0 #0a0a0a, 15px 15px 0 #0a0a0a; }
+
+/* font slots: family / weight / style come from the control page (PP.FONT_SLOTS) */
+.pp-stage .pp-pname { font-family:var(--ff-scoreName); font-weight:var(--fw-scoreName); font-style:var(--fs-scoreName); }
+.pp-stage .pp-pscore { font-family:var(--ff-score); font-weight:var(--fw-score); font-style:var(--fs-score); }
+.pp-stage .pp-plus, .pp-stage .pp-out, .pp-stage .pp-xcount { font-family:var(--ff-pop); font-weight:var(--fw-pop); font-style:var(--fs-pop); }
+.pp-stage .pp-title { font-family:var(--ff-title); font-weight:var(--fw-title); font-style:var(--fs-title); }
+.pp-stage .jc-name { font-family:var(--ff-cardName); font-weight:var(--fw-cardName); font-style:var(--fs-cardName); }
+.pp-stage .jc-val { font-family:var(--ff-cardVal); font-weight:var(--fw-cardVal); font-style:var(--fs-cardVal); }
+.pp-stage .jc-lbl, .pp-stage .jc-rank i, .pp-stage .jc-pin span { font-family:var(--ff-cardLbl); font-weight:var(--fw-cardLbl); font-style:var(--fs-cardLbl); }
+.pp-stage .jc-rank b { font-family:var(--ff-rank); font-weight:var(--fw-rank); font-style:var(--fs-rank); }
+.pp-stage .jt, .pp-stage .jt b { font-family:var(--ff-teams); font-weight:var(--fw-teams); font-style:var(--fs-teams); }
+.pp-stage .jc-who, .pp-stage .jc-who b, .pp-stage .jc-rare { font-family:var(--ff-who); font-weight:var(--fw-who); font-style:var(--fs-who); }
+.pp-stage .jc-pin { font-family:var(--ff-pin); font-weight:var(--fw-pin); font-style:var(--fs-pin); }
+.pp-stage .pp-bhead, .pp-stage .pp-bhead b { font-family:var(--ff-boardHead); font-weight:var(--fw-boardHead); font-style:var(--fs-boardHead); }
+.pp-stage .pp-slot { font-family:var(--ff-board); font-weight:var(--fw-board); font-style:var(--fs-board); }
+/* PRIMETIME = ten drop shadows on whatever it's used for */
+.pp-stage[data-fx-scorename] .pp-pname { text-shadow:3px 0px 0 #3a2410, -3px 0px 0 #3a2410, 0px 3px 0 #3a2410, 0px -3px 0 #3a2410, 2px 2px 0 #3a2410, -2px -2px 0 #3a2410, 2px -2px 0 #3a2410, -2px 2px 0 #3a2410, 3px 3px 0 #3a2410, 4px 4px 0 #3a2410, 5px 5px 0 #3a2410, 6px 6px 0 #3a2410, 7px 7px 0 #3a2410, 8px 8px 0 #3a2410, 9px 9px 0 #3a2410, 10px 10px 0 #3a2410, 11px 11px 0 #3a2410, 12px 12px 0 #3a2410; }
+.pp-stage[data-fx-score] .pp-pscore { text-shadow:4px 0px 0 #0a0a0a, -4px 0px 0 #0a0a0a, 0px 4px 0 #0a0a0a, 0px -4px 0 #0a0a0a, 3px 3px 0 #0a0a0a, -3px -3px 0 #0a0a0a, 3px -3px 0 #0a0a0a, -3px 3px 0 #0a0a0a, 6px 6px 0 #0a0a0a, 7px 7px 0 #0a0a0a, 8px 8px 0 #0a0a0a, 9px 9px 0 #0a0a0a, 10px 10px 0 #0a0a0a, 11px 11px 0 #0a0a0a, 12px 12px 0 #0a0a0a, 13px 13px 0 #0a0a0a, 14px 14px 0 #0a0a0a, 15px 15px 0 #0a0a0a; }
+.pp-stage[data-fx-pop] .pp-plus { text-shadow:4px 0px 0 #0a0a0a, -4px 0px 0 #0a0a0a, 0px 4px 0 #0a0a0a, 0px -4px 0 #0a0a0a, 3px 3px 0 #0a0a0a, -3px -3px 0 #0a0a0a, 3px -3px 0 #0a0a0a, -3px 3px 0 #0a0a0a, 4px 4px 0 #0a0a0a, 5px 5px 0 #0a0a0a, 6px 6px 0 #0a0a0a, 7px 7px 0 #0a0a0a, 8px 8px 0 #0a0a0a, 9px 9px 0 #0a0a0a, 10px 10px 0 #0a0a0a, 11px 11px 0 #0a0a0a, 12px 12px 0 #0a0a0a, 13px 13px 0 #0a0a0a; }
+.pp-stage[data-fx-title] .pp-title { text-shadow:2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 0 #000, 5px 5px 0 #000, 6px 6px 0 #000, 7px 7px 0 #000, 8px 8px 0 #000, 9px 9px 0 #000, 10px 10px 0 #000, 11px 11px 0 #000; }
+.pp-stage[data-fx-cardname] .jc-name { text-shadow:5px 0px 0 #0a0a0a, -5px 0px 0 #0a0a0a, 0px 5px 0 #0a0a0a, 0px -5px 0 #0a0a0a, 4px 4px 0 #0a0a0a, -4px -4px 0 #0a0a0a, 4px -4px 0 #0a0a0a, -4px 4px 0 #0a0a0a, 6px 6px 0 #0a0a0a, 7px 7px 0 #0a0a0a, 8px 8px 0 #0a0a0a, 9px 9px 0 #0a0a0a, 10px 10px 0 #0a0a0a, 11px 11px 0 #0a0a0a, 12px 12px 0 #0a0a0a, 13px 13px 0 #0a0a0a, 14px 14px 0 #0a0a0a, 15px 15px 0 #0a0a0a; }
+.pp-stage[data-fx-cardval] .jc-val { text-shadow:5px 0px 0 #0a0a0a, -5px 0px 0 #0a0a0a, 0px 5px 0 #0a0a0a, 0px -5px 0 #0a0a0a, 4px 4px 0 #0a0a0a, -4px -4px 0 #0a0a0a, 4px -4px 0 #0a0a0a, -4px 4px 0 #0a0a0a, 6px 6px 0 #0a0a0a, 7px 7px 0 #0a0a0a, 8px 8px 0 #0a0a0a, 9px 9px 0 #0a0a0a, 10px 10px 0 #0a0a0a, 11px 11px 0 #0a0a0a, 12px 12px 0 #0a0a0a, 13px 13px 0 #0a0a0a, 14px 14px 0 #0a0a0a, 15px 15px 0 #0a0a0a; }
+.pp-stage[data-fx-rank] .jc-rank b { text-shadow:1px 1px 0 rgba(0,0,0,.85), 2px 2px 0 rgba(0,0,0,.85), 3px 3px 0 rgba(0,0,0,.85), 4px 4px 0 rgba(0,0,0,.85), 5px 5px 0 rgba(0,0,0,.85), 6px 6px 0 rgba(0,0,0,.85), 7px 7px 0 rgba(0,0,0,.85), 8px 8px 0 rgba(0,0,0,.85), 9px 9px 0 rgba(0,0,0,.85), 10px 10px 0 rgba(0,0,0,.85); }
+.pp-stage[data-fx-teams] .jt b { text-shadow:2px 0px 0 #0a0a0a, -2px 0px 0 #0a0a0a, 0px 2px 0 #0a0a0a, 0px -2px 0 #0a0a0a, 1px 1px 0 #0a0a0a, -1px -1px 0 #0a0a0a, 1px -1px 0 #0a0a0a, -1px 1px 0 #0a0a0a, 1.0px 1.0px 0 #0a0a0a, 1.6px 1.6px 0 #0a0a0a, 2.2px 2.2px 0 #0a0a0a, 2.8px 2.8px 0 #0a0a0a, 3.4px 3.4px 0 #0a0a0a, 4.0px 4.0px 0 #0a0a0a, 4.6px 4.6px 0 #0a0a0a, 5.2px 5.2px 0 #0a0a0a, 5.8px 5.8px 0 #0a0a0a, 6.3999999999999995px 6.3999999999999995px 0 #0a0a0a; }
+.pp-stage[data-fx-who] .jc-who { text-shadow:3px 0px 0 #0a0a0a, -3px 0px 0 #0a0a0a, 0px 3px 0 #0a0a0a, 0px -3px 0 #0a0a0a, 2px 2px 0 #0a0a0a, -2px -2px 0 #0a0a0a, 2px -2px 0 #0a0a0a, -2px 2px 0 #0a0a0a, 3.0px 3.0px 0 #0a0a0a, 3.8px 3.8px 0 #0a0a0a, 4.6px 4.6px 0 #0a0a0a, 5.4px 5.4px 0 #0a0a0a, 6.2px 6.2px 0 #0a0a0a, 7.0px 7.0px 0 #0a0a0a, 7.800000000000001px 7.800000000000001px 0 #0a0a0a, 8.600000000000001px 8.600000000000001px 0 #0a0a0a, 9.4px 9.4px 0 #0a0a0a, 10.2px 10.2px 0 #0a0a0a; }
+.pp-stage[data-fx-pin] .jc-pin { text-shadow:5px 0px 0 #0a0a0a, -5px 0px 0 #0a0a0a, 0px 5px 0 #0a0a0a, 0px -5px 0 #0a0a0a, 4px 4px 0 #0a0a0a, -4px -4px 0 #0a0a0a, 4px -4px 0 #0a0a0a, -4px 4px 0 #0a0a0a, 6px 6px 0 #0a0a0a, 7px 7px 0 #0a0a0a, 8px 8px 0 #0a0a0a, 9px 9px 0 #0a0a0a, 10px 10px 0 #0a0a0a, 11px 11px 0 #0a0a0a, 12px 12px 0 #0a0a0a, 13px 13px 0 #0a0a0a, 14px 14px 0 #0a0a0a, 15px 15px 0 #0a0a0a; }
+.pp-stage[data-fx-boardhead] .pp-bhead b { text-shadow:2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 0 #000, 5px 5px 0 #000, 6px 6px 0 #000, 7px 7px 0 #000, 8px 8px 0 #000, 9px 9px 0 #000, 10px 10px 0 #000, 11px 11px 0 #000; }

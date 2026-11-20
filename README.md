@@ -33,15 +33,16 @@ Three strikes and you're out. Naming the very last player on the list is a **PIN
 5. Clicking a row in the answer key also awards it to whoever is picking.
 
 **Rank reveal:** a correct pick puts the card up with the rank hidden — and the points held back on the scoreboard — until
-you press **★ Reveal rank** (or `R`); the rank then star-wipes in with a whoosh. Switch to *auto* (1.8s) or *show with the card*
+you press **★ Reveal rank** (or the spacebar); the rank then star-wipes in with a whoosh. Switch to *auto* (1.8s) or *show with the card*
 under **Rank reveal & sounds**, where you also pick which of the 25 whooshes (in `sfx/`) plays for the card and the wipe.
 OBS: tick *Control audio via OBS* on the browser source to hear them; add `&mute` to the display URL to silence it.
 
-Keys (outside the text box): `R` reveal rank · `C` card · `S` scoreboard · `X` strike boxes · `T` turn arrow · `B` full board ·
+Keys (outside the text box): `Space` (or `R`) reveal rank — Space also works from an empty name box · `C` card · `S` scoreboard · `X` strike boxes · `T` turn arrow · `B` full board ·
 `←/→` change picker · `U` undo · `Enter` or `/` jumps to the name box.
 
-## Scoreboard fonts
-Pick the names font and the scores font on the control page. Adobe Fonts (kit `lxl2pkq`): Gothic Open Shaded, Roboto,
+## Fonts
+Every piece of on-screen text has its own font dropdown under **Fonts** on the control page (scoreboard names, scores,
++points/OUT, title bar; card name, stat number, small labels, rank, team tags, contestant tag, PINPOINT; board title/names). Adobe Fonts (kit `lxl2pkq`): Gothic Open Shaded, Roboto,
 Roboto ExtraLight. **PRIMETIME** (with ten drop shadows) and **Designer** are *not* in this repo — the PRIMETIME licence is
 personal-use only and forbids sharing the file — so install them on the control and OBS computers (double-click → Install).
 The free PRIMETIME has no digits (every number is the Hypefonts logo), so use it for names and Designer for scores.
@@ -51,6 +52,9 @@ Under the preview, click a numbered chip to choose (and hear) the whoosh for the
 🔀 picks a different one each time; right-click a chip to just listen.
 
 ## Layout
+Scores can be fixed by hand: hover a contestant on the control page for −10 / −1 / +1 / +10 and ✎ (type a score).
+Layout → Scoreboard also has *Numbers %* and *Names %* to size the score numbers and names on their own.
+
 Open **Layout — sizes & positions** on the control page. Drag the card, scoreboard or strike boxes on the
 preview to move them, scroll over one to resize it, or use the S/M/L/XL buttons and the sliders. The strike
 boxes follow the scoreboard unless you untick that box. Layout is saved in the browser and sent to OBS.

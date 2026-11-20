@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://use.typekit.net/lxl2pkq.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="pp.css?v=11">
+<link rel="stylesheet" href="pp.css?v=12">
 <style>
   :root { --navy:#0d1f2d; --navy2:#13293b; --navy3:#1b3850; --line:#24425c; --gold:#fbcc7a; --ink:#eef3f8; --dim:#9fb2c4; --red:#ff5a5f; --green:#3ddc84; }
   * { box-sizing:border-box; }
@@ -66,7 +66,7 @@
   .pl .sc { font:400 34px/1 'Bebas Neue'; }
   .pl .xs { font:700 15px 'DM Mono'; color:var(--red); letter-spacing:2px; }
   .pl.out { opacity:.45; } .pl.out::after { content:'OUT'; position:absolute; right:8px; top:6px; font:700 12px 'DM Mono'; color:var(--red); }
-  .pl .adj { position:absolute; right:6px; bottom:6px; display:flex; gap:3px; opacity:0; }
+  .pl .adj { position:absolute; right:6px; bottom:6px; left:6px; display:flex; flex-wrap:wrap; justify-content:flex-end; gap:3px; opacity:0; background:var(--navy2); }
   .pl:hover .adj { opacity:1; }
   .pl .adj button { padding:1px 6px; font-size:11px; }
   .guess { position:relative; }
@@ -218,10 +218,10 @@
     <div class="row"><span class="lbl" style="margin:0;width:70px">Card in</span><select id="sfxCard" style="flex:1"><option value="whoosh-01">Whoosh 1</option><option value="whoosh-02">Whoosh 2</option><option value="whoosh-03">Whoosh 3</option><option value="whoosh-04">Whoosh 4</option><option value="whoosh-05">Whoosh 5</option><option value="whoosh-06">Whoosh 6</option><option value="whoosh-07">Whoosh 7</option><option value="whoosh-08">Whoosh 8</option><option value="whoosh-09">Whoosh 9</option><option value="whoosh-10">Whoosh 10</option><option value="whoosh-11">Whoosh 11</option><option value="whoosh-12">Whoosh 12</option><option value="whoosh-13">Whoosh 13</option><option value="whoosh-14">Whoosh 14</option><option value="whoosh-15">Whoosh 15</option><option value="whoosh-16">Whoosh 16</option><option value="whoosh-17">Whoosh 17</option><option value="whoosh-18">Whoosh 18</option><option value="whoosh-19">Whoosh 19</option><option value="whoosh-20">Whoosh 20</option><option value="whoosh-21">Whoosh 21</option><option value="whoosh-22">Whoosh 22</option><option value="whoosh-23">Whoosh 23</option><option value="whoosh-24">Whoosh 24</option><option value="whoosh-25">Whoosh 25</option></select><button class="sm" data-play="sfxCard">▶</button></div>
     <div class="row"><span class="lbl" style="margin:0;width:70px">Rank wipe</span><select id="sfxReveal" style="flex:1"><option value="whoosh-01">Whoosh 1</option><option value="whoosh-02">Whoosh 2</option><option value="whoosh-03">Whoosh 3</option><option value="whoosh-04">Whoosh 4</option><option value="whoosh-05">Whoosh 5</option><option value="whoosh-06">Whoosh 6</option><option value="whoosh-07">Whoosh 7</option><option value="whoosh-08">Whoosh 8</option><option value="whoosh-09">Whoosh 9</option><option value="whoosh-10">Whoosh 10</option><option value="whoosh-11">Whoosh 11</option><option value="whoosh-12">Whoosh 12</option><option value="whoosh-13">Whoosh 13</option><option value="whoosh-14">Whoosh 14</option><option value="whoosh-15">Whoosh 15</option><option value="whoosh-16">Whoosh 16</option><option value="whoosh-17">Whoosh 17</option><option value="whoosh-18">Whoosh 18</option><option value="whoosh-19">Whoosh 19</option><option value="whoosh-20">Whoosh 20</option><option value="whoosh-21">Whoosh 21</option><option value="whoosh-22">Whoosh 22</option><option value="whoosh-23">Whoosh 23</option><option value="whoosh-24">Whoosh 24</option><option value="whoosh-25">Whoosh 25</option></select><button class="sm" data-play="sfxReveal">▶</button></div>
 
-    <h2>Scoreboard fonts</h2>
-    <div class="row"><span class="lbl" style="margin:0;width:70px">Names</span><select id="fName" style="flex:1"><option value="anton">Anton (original)</option><option value="primetime">PRIMETIME (installed) + ten drop shadows</option><option value="designer">Designer (installed)</option><option value="gothic">Gothic Open Shaded</option><option value="roboto">Roboto Bold</option><option value="roboto-r">Roboto</option><option value="roboto-i">Roboto Italic</option><option value="roboto-xl">Roboto ExtraLight</option><option value="roboto-xli">Roboto ExtraLight Italic</option></select></div>
-    <div class="row"><span class="lbl" style="margin:0;width:70px">Scores</span><select id="fScore" style="flex:1"><option value="anton">Anton (original)</option><option value="primetime">PRIMETIME (installed) + ten drop shadows</option><option value="designer">Designer (installed)</option><option value="gothic">Gothic Open Shaded</option><option value="roboto">Roboto Bold</option><option value="roboto-r">Roboto</option><option value="roboto-i">Roboto Italic</option><option value="roboto-xl">Roboto ExtraLight</option><option value="roboto-xli">Roboto ExtraLight Italic</option></select></div>
-    <div class="hint" id="fontWarn">PRIMETIME gets ten drop shadows. PRIMETIME and Designer have to be <b>installed</b> on this computer and the OBS computer (double-click the font file → Install) — they aren't bundled.</div>
+    <h2>Fonts</h2>
+    <div id="fontsEd"></div>
+    <div class="row"><button class="sm" id="fontsReset">Reset fonts</button></div>
+    <div class="hint" id="fontWarn"></div>
 
     <h2>Contestants</h2>
     <div id="playersEd"></div>
@@ -249,7 +249,7 @@
     </div>
     <div id="result">Load a list, set your contestants, and start typing names.</div>
     <div class="btns">
-      <button id="bRank" class="gold">★ Reveal rank<span class="kbd">R</span></button>
+      <button id="bRank" class="gold">★ Reveal rank<span class="kbd">Space</span></button>
       <button id="bCard">Card<span class="kbd">C</span></button>
       <button id="bScore">Scoreboard<span class="kbd">S</span></button>
       <button id="bStrikes">Strike boxes<span class="kbd">X</span></button>
@@ -314,9 +314,9 @@
   </div>
 </dialog>
 
-<script src="pp.js?v=11"></script>
-<script src="fpdata.js?v=11"></script>
-<script src="players.js?v=11"></script>
+<script src="pp.js?v=12"></script>
+<script src="fpdata.js?v=12"></script>
+<script src="players.js?v=12"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -356,7 +356,7 @@
     maxStrikes: LS.get('strikes', 3), order: LS.get('order', 'snake'), themeMode: LS.get('themeMode', 'rotate'),
     turn: 0, dir: 1, guesses: [], misses: [], card: null, cardN: 0,
     revealMode: LS.get('revealMode', 'manual'), pending: null,
-    fonts: Object.assign({ name: 'primetime', score: 'designer' }, LS.get('fonts', {})),
+    fonts: (() => { const f = Object.assign({}, LS.get('fonts', {})); if (f.name && !f.scoreName) { f.scoreName = f.name; delete f.name; } return Object.assign(PP.fontDefaults(), f); })(),
     sfx: Object.assign({ on: true, vol: 80, card: 'whoosh-01', reveal: 'whoosh-07' }, LS.get('sfx', {})),
     show: Object.assign({ card:true, score:true, strikes:true, turn:true, title:false, board:false }, LS.get('show', {})),
     layout: Object.assign({}, PP.LAY_DEFAULT, LS.get('layout', {})),
@@ -959,6 +959,7 @@
     else if (e.key === 'ArrowUp' && sItems.length) { e.preventDefault(); sSel = (sSel - 1 + sItems.length) % sItems.length; suggest_hl(); }
     else if (e.key === 'Enter') { e.preventDefault(); if (sItems.length && sSel >= 0 && PP.norm(sItems[sSel].n) !== PP.norm(gIn.value) && !pendingUnknown) pick(sSel); else { hideSugg(); submit(gIn.value); } }
     else if (e.key === 'Escape') { gIn.value = ''; hideSugg(); pendingUnknown = null; }
+    else if (e.key === ' ' && !gIn.value.trim() && G.card && G.card.rankShown === false) { e.preventDefault(); revealRank(); }   // spacebar = reveal, even from the name box (a name never starts with a space)
     else if (e.key === 'Tab' && sItems.length) { e.preventDefault(); gIn.value = sItems[Math.max(sSel, 0)].n; hideSugg(); }
   });
   gIn.addEventListener('blur', () => setTimeout(hideSugg, 150));
@@ -972,21 +973,29 @@
   ['sfxOn', 'sfxVol', 'sfxCard', 'sfxReveal'].forEach(id => $(id).addEventListener('change', saveSfx));
   document.querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const a = new Audio('sfx/' + $(b.dataset.play).value + '.m4a'); a.volume = +$('sfxVol').value / 100; a.play().catch(() => {}); });
   $('bRank').onclick = revealRank;
-  // fonts
-  $('fName').value = G.fonts.name; $('fScore').value = G.fonts.score;
-  const saveFonts = () => { G.fonts = { name: $('fName').value, score: $('fScore').value }; LS.set('fonts', G.fonts); publish(); checkFonts(); };
-  $('fName').onchange = saveFonts; $('fScore').onchange = saveFonts;
-  function checkFonts() {
-    if (!document.fonts || !document.fonts.check) return;
-    const miss = [['primetime', 'NPP Primetime', 'PRIMETIME'], ['designer', 'NPP Designer', 'Designer']]
-      .filter(([k, fam]) => (G.fonts.name === k || G.fonts.score === k) && !document.fonts.check(`40px "${fam}"`));
-    const ptScore = G.fonts.score === 'primetime';
-    $('fontWarn').style.color = miss.length || ptScore ? 'var(--red)' : '';
-    if (ptScore && !miss.length) { $('fontWarn').innerHTML = '<b>The free PRIMETIME has no numbers</b> — every digit is the Hypefonts "HF" logo. Use it for names, and Designer (or another font) for scores, unless you have the full PRIMETIME.'; return; }
-    $('fontWarn').innerHTML = miss.length ? `<b>${miss.map(m => m[2]).join(' and ')} isn't installed on this computer</b> — the scoreboard falls back to Anton. Double-click the font file → Install, on this computer and the OBS computer, then reload.`
-      : 'PRIMETIME gets ten drop shadows. PRIMETIME and Designer load from the fonts installed on this computer and the OBS computer — they aren\'t bundled.';
+  // fonts: one dropdown per on-screen text element
+  function renderFontsEd() {
+    const opts = Object.entries(PP.FONTS).map(([k, d]) => `<option value="${k}">${PP.esc(d[0])}</option>`).join('');
+    let grp = '';
+    $('fontsEd').innerHTML = PP.FONT_SLOTS.map(([k, label, , g]) => (g !== grp ? `<div class="lbl">${(grp = g)}</div>` : '') +
+      `<div class="row" style="margin-bottom:4px"><span style="width:118px;font-size:12px;color:var(--dim)">${PP.esc(label)}</span><select data-font="${k}" style="flex:1;padding:4px 6px">${opts}</select></div>`).join('');
+    $('fontsEd').querySelectorAll('[data-font]').forEach(sel => { sel.value = G.fonts[sel.dataset.font]; sel.onchange = () => { G.fonts[sel.dataset.font] = sel.value; saveFonts(); }; });
   }
-  document.fonts && document.fonts.load('40px "NPP Primetime"').then(checkFonts, checkFonts); document.fonts && document.fonts.load('40px "NPP Designer"').then(checkFonts, checkFonts);
+  function saveFonts() { LS.set('fonts', G.fonts); publish(); checkFonts(); }
+  $('fontsReset').onclick = () => { G.fonts = PP.fontDefaults(); renderFontsEd(); saveFonts(); };
+  function checkFonts() {
+    const used = new Set(Object.values(G.fonts));
+    const miss = !document.fonts || !document.fonts.check ? [] : [['primetime', 'NPP Primetime', 'PRIMETIME'], ['designer', 'NPP Designer', 'Designer']]
+      .filter(([k, fam]) => used.has(k) && !document.fonts.check(`40px "${fam}"`));
+    const ptNum = ['score', 'cardVal', 'rank', 'pop'].filter(k => G.fonts[k] === 'primetime');
+    const w = $('fontWarn');
+    if (miss.length) { w.style.color = 'var(--red)'; w.innerHTML = `<b>${miss.map(m => m[2]).join(' and ')} ${miss.length > 1 ? 'aren\'t' : 'isn\'t'} installed on this computer</b> — those spots fall back to Anton. Double-click the font file → Install, on this computer and the OBS computer, then reload.`; }
+    else if (ptNum.length) { w.style.color = 'var(--red)'; w.innerHTML = '<b>The free PRIMETIME has no numbers</b> — every digit is the Hypefonts "HF" logo. Pick another font for scores, stat numbers and the rank unless you have the full PRIMETIME.'; }
+    else { w.style.color = ''; w.innerHTML = 'PRIMETIME adds ten drop shadows wherever it\'s used. PRIMETIME and Designer load from fonts installed on this computer and the OBS computer — they aren\'t bundled.'; }
+  }
+  renderFontsEd();
+  ['NPP Primetime', 'NPP Designer'].forEach(f => document.fonts && document.fonts.load(`40px "${f}"`).then(checkFonts, checkFonts));
+  checkFonts();
   // whoosh chips under the preview
   const WN = Array.from({ length: 25 }, (_, i) => 'whoosh-' + String(i + 1).padStart(2, '0'));
   const hear = n => { const a = new Audio('sfx/' + n + '.m4a'); a.volume = (G.sfx.vol ?? 80) / 100; a.play().catch(() => {}); };
@@ -1017,7 +1026,7 @@
   $('bReveal').onclick = () => { if (confirm('Reveal every unnamed player on the board?')) revealRest(); };
   document.addEventListener('keydown', e => {
     if (e.target.matches('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.key.toLowerCase() === 'r') { e.preventDefault(); revealRank(); return; }
+    if (e.key === ' ' || e.key.toLowerCase() === 'r') { e.preventDefault(); revealRank(); return; }
     const m = { c: 'card', s: 'score', x: 'strikes', t: 'turn', b: 'board' }[e.key.toLowerCase()];
     if (m) { e.preventDefault(); toggle(m); }
     else if (e.key === 'ArrowLeft') setTurn(G.turn - 1);
@@ -1042,7 +1051,7 @@
   // layout sliders
   const SL = [
     ['Card', [['cs', 'Size %', 30, 140], ['cx', 'X', -600, 1800], ['cy', 'Y', -600, 1000]]],
-    ['Scoreboard', [['ss', 'Size %', 30, 140], ['sx', 'X', -500, 1900], ['sy', 'Y', -100, 1060]]],
+    ['Scoreboard', [['ss', 'Size %', 30, 140], ['sx', 'X', -500, 1900], ['sy', 'Y', -100, 1060], ['sn', 'Numbers %', 40, 160], ['snm', 'Names %', 40, 160]]],
     ['Strike boxes', [['ks', 'Size %', 30, 140], ['kx', 'Centre X', 0, 1920], ['ky', 'Y', -100, 1060]]],
     ['Full board', [['bs', 'Size %', 40, 110]]],
   ];
@@ -1108,9 +1117,11 @@
     $('plLive').innerHTML = G.players.map((p, i) => `<div class="pl${i === G.turn && !p.out ? ' turn' : ''}${p.out ? ' out' : ''}" style="--pc:${p.color}" data-t="${i}">
       <div class="nm">${i === G.turn && !p.out ? '▶ ' : ''}${PP.esc(p.name)}</div><div class="sc">${p.score}${G.pending && G.pending.who === i ? `<span style="font:500 12px 'DM Mono';color:var(--gold)"> +${G.pending.pts} on reveal</span>` : ''}</div>
       <div class="xs">${G.maxStrikes ? '✕'.repeat(p.strikes) + '<span style="color:#456">' + '□'.repeat(Math.max(0, G.maxStrikes - p.strikes)) + '</span>' : '✕ ' + p.strikes}</div>
-      <div class="adj"><button data-s="${i}" title="Remove a strike">−✕</button><button data-o="${i}" title="Toggle out">${p.out ? 'in' : 'out'}</button></div></div>`).join('');
+      <div class="adj"><button data-d="${i}" data-v="-10">−10</button><button data-d="${i}" data-v="-1">−1</button><button data-d="${i}" data-v="1">+1</button><button data-d="${i}" data-v="10">+10</button><button data-e="${i}" title="Type a score">✎</button><button data-s="${i}" title="Remove a strike">−✕</button><button data-o="${i}" title="Toggle out">${p.out ? 'in' : 'out'}</button></div></div>`).join('');
     $('plLive').querySelectorAll('.pl').forEach(d => d.onclick = e => { if (e.target.closest('button')) return; setTurn(+d.dataset.t); });
     $('plLive').querySelectorAll('[data-s]').forEach(b => b.onclick = () => { const p = G.players[+b.dataset.s]; if (p.strikes > 0) { pushUndo(); p.strikes--; p.out = G.maxStrikes > 0 && p.strikes >= G.maxStrikes; renderAll(); publish(); } });
+    $('plLive').querySelectorAll('[data-d]').forEach(b => b.onclick = () => { pushUndo(); const p = G.players[+b.dataset.d]; p.score = Math.max(0, p.score + +b.dataset.v); log(`± ${p.name} ${+b.dataset.v > 0 ? '+' : ''}${b.dataset.v} → ${p.score}`); renderAll(); publish(); });
+    $('plLive').querySelectorAll('[data-e]').forEach(b => b.onclick = () => { const p = G.players[+b.dataset.e]; const v = prompt(`Score for ${p.name}:`, p.score); if (v == null || v.trim() === '' || isNaN(+v)) return; pushUndo(); p.score = Math.max(0, Math.round(+v)); log(`✎ ${p.name} set to ${p.score}`); renderAll(); publish(); });
     $('plLive').querySelectorAll('[data-o]').forEach(b => b.onclick = () => { pushUndo(); const p = G.players[+b.dataset.o]; p.out = !p.out; renderAll(); publish(); });
     // game over banner
     const ob = $('overBanner');
