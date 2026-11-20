@@ -41,7 +41,7 @@ Keys (outside the text box): `Space` (or `R`) reveal rank — Space also works f
 `←/→` change picker · `U` undo · `Enter` or `/` jumps to the name box.
 
 ## Fonts
-Every piece of on-screen text has its own font dropdown under **Fonts** on the control page (scoreboard names, scores,
+Every piece of on-screen text has its own font dropdown (139 fonts: 125 Google Fonts loaded on demand, your Adobe kit, installed PRIMETIME/Designer, Mac system fonts) under **Fonts** on the control page (scoreboard names, scores,
 +points/OUT, title bar; card name, stat number, small labels, rank, team tags, contestant tag, PINPOINT; board title/names). Adobe Fonts (kit `lxl2pkq`): Gothic Open Shaded, Roboto,
 Roboto ExtraLight. **PRIMETIME** (with ten drop shadows) and **Designer** are *not* in this repo — the PRIMETIME licence is
 personal-use only and forbids sharing the file — so install them on the control and OBS computers (double-click → Install).
@@ -53,7 +53,7 @@ Under the preview, click a numbered chip to choose (and hear) the whoosh for the
 
 ## Layout
 Scores can be fixed by hand: hover a contestant on the control page for −10 / −1 / +1 / +10 and ✎ (type a score).
-Layout → Scoreboard also has *Numbers %* and *Names %* to size the score numbers and names on their own.
+Layout → Scoreboard also has *Numbers %* and *Names %*. The full board can be dragged on the preview (or Layout → Full board X/Y/size).
 
 Open **Layout — sizes & positions** on the control page. Drag the card, scoreboard or strike boxes on the
 preview to move them, scroll over one to resize it, or use the S/M/L/XL buttons and the sliders. The strike

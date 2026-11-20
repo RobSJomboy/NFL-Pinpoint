@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://use.typekit.net/lxl2pkq.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="pp.css?v=13">
+<link rel="stylesheet" href="pp.css?v=14">
 <style>
   :root { --navy:#0d1f2d; --navy2:#13293b; --navy3:#1b3850; --line:#24425c; --gold:#fbcc7a; --ink:#eef3f8; --dim:#9fb2c4; --red:#ff5a5f; --green:#3ddc84; }
   * { box-sizing:border-box; }
@@ -111,6 +111,10 @@
   .over.on { display:block; }
   .scroll-key { max-height:calc(100vh - 260px); overflow:auto; }
   #imgOverride { width:100%; }
+  .fslot { display:grid; grid-template-columns:104px 1fr 62px; gap:6px; align-items:center; margin-bottom:4px; }
+  .fslot .fl { font-size:12px; color:var(--dim); line-height:1.15; }
+  .fslot select { padding:4px 6px; min-width:0; }
+  .fslot .fs { font-size:20px; line-height:1; color:var(--ink); white-space:nowrap; overflow:hidden; text-align:right; }
   .whoosh { background:var(--navy2); border:1px solid var(--line); border-radius:10px; padding:8px 10px; }
   .wrow { display:flex; align-items:center; gap:8px; margin:3px 0; } .wrow .lbl { margin:0; width:74px; flex:none; }
   .chips2 { display:flex; flex-wrap:wrap; gap:3px; }
@@ -314,9 +318,9 @@
   </div>
 </dialog>
 
-<script src="pp.js?v=13"></script>
-<script src="fpdata.js?v=13"></script>
-<script src="players.js?v=13"></script>
+<script src="pp.js?v=14"></script>
+<script src="fpdata.js?v=14"></script>
+<script src="players.js?v=14"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -975,11 +979,22 @@
   $('bRank').onclick = revealRank;
   // fonts: one dropdown per on-screen text element
   function renderFontsEd() {
-    const opts = Object.entries(PP.FONTS).map(([k, d]) => `<option value="${k}">${PP.esc(d[0])}</option>`).join('');
+    const groups = {};
+    Object.entries(PP.FONTS).forEach(([k, d]) => { (groups[d[4]] = groups[d[4]] || []).push([k, d]); });
+    const order = ['Your fonts', 'Block & condensed', 'Heavy & impact', 'Sporty & varsity', 'Fun & comic', 'Slab & western', 'Tech & retro', 'Script & marker', 'Clean', 'On this computer'];
+    const opts = order.filter(g => groups[g]).map(g => `<optgroup label="${g}">${groups[g].map(([k, d]) => `<option value="${k}">${PP.esc(d[0])}</option>`).join('')}</optgroup>`).join('');
     let grp = '';
-    $('fontsEd').innerHTML = PP.FONT_SLOTS.map(([k, label, , g]) => (g !== grp ? `<div class="lbl">${(grp = g)}</div>` : '') +
-      `<div class="row" style="margin-bottom:4px"><span style="width:118px;font-size:12px;color:var(--dim)">${PP.esc(label)}</span><select data-font="${k}" style="flex:1;padding:4px 6px">${opts}</select></div>`).join('');
-    $('fontsEd').querySelectorAll('[data-font]').forEach(sel => { sel.value = G.fonts[sel.dataset.font]; sel.onchange = () => { G.fonts[sel.dataset.font] = sel.value; saveFonts(); }; });
+    $('fontsEd').innerHTML = `<div class="hint" style="margin-top:0">${Object.keys(PP.FONTS).length} fonts. Each one loads only when you pick it.</div>` + PP.FONT_SLOTS.map(([k, label, , g]) => (g !== grp ? `<div class="lbl">${(grp = g)}</div>` : '') +
+      `<div class="fslot"><span class="fl">${PP.esc(label)}</span><select data-font="${k}">${opts}</select><span class="fs" data-sample="${k}">Aa 123</span></div>`).join('');
+    $('fontsEd').querySelectorAll('[data-font]').forEach(sel => {
+      sel.value = G.fonts[sel.dataset.font] in PP.FONTS ? G.fonts[sel.dataset.font] : 'anton';
+      sel.onchange = () => { G.fonts[sel.dataset.font] = sel.value; sampleFont(sel.dataset.font); saveFonts(); };
+      sampleFont(sel.dataset.font);
+    });
+  }
+  function sampleFont(slot) {
+    const k = G.fonts[slot], d = PP.FONTS[k] || PP.FONTS.anton, el = document.querySelector(`[data-sample="${slot}"]`); if (!el) return;
+    PP.ensureFont(k); el.style.fontFamily = d[1]; el.style.fontWeight = d[2]; el.style.fontStyle = d[3];
   }
   function saveFonts() { LS.set('fonts', G.fonts); publish(); checkFonts(); }
   $('fontsReset').onclick = () => { G.fonts = PP.fontDefaults(); renderFontsEd(); saveFonts(); };
@@ -1053,7 +1068,7 @@
     ['Card', [['cs', 'Size %', 30, 140], ['cx', 'X', -600, 1800], ['cy', 'Y', -600, 1000]]],
     ['Scoreboard', [['ss', 'Size %', 30, 140], ['sx', 'X', -500, 1900], ['sy', 'Y', -100, 1060], ['sn', 'Numbers %', 40, 160], ['snm', 'Names %', 40, 160]]],
     ['Strike boxes', [['ks', 'Size %', 30, 140], ['kx', 'Centre X', 0, 1920], ['ky', 'Y', -100, 1060]]],
-    ['Full board', [['bs', 'Size %', 40, 110]]],
+    ['Full board', [['bs', 'Size %', 30, 120], ['bx', 'X', -1500, 1500], ['by', 'Y', -900, 900]]],
   ];
   let linkK = LS.get('linkK', true);
   function setLay(k, v) {
@@ -1089,13 +1104,13 @@
   const pvScale = () => pvHost.getBoundingClientRect().width / 1920;
   let drag = null;
   pvBoxEl.addEventListener('pointerdown', e => {
-    const k = pieceAt(e.target); if (!k || k === 'b') return;
+    const k = pieceAt(e.target); if (!k) return;
     e.preventDefault(); pvBoxEl.setPointerCapture(e.pointerId);
     drag = { k, x: e.clientX, y: e.clientY, ox: G.layout[k + 'x'], oy: G.layout[k + 'y'] };
     pvBoxEl.classList.add('dragging');
   });
   pvBoxEl.addEventListener('pointermove', e => {
-    if (!drag) { const k = pieceAt(e.target); pvBoxEl.style.cursor = k && k !== 'b' ? 'grab' : ''; return; }
+    if (!drag) { const k = pieceAt(e.target); pvBoxEl.style.cursor = k ? 'grab' : ''; return; }
     const sc = pvScale();
     setLay(drag.k + 'x', drag.ox + (e.clientX - drag.x) / sc);
     setLay(drag.k + 'y', drag.oy + (e.clientY - drag.y) / sc);

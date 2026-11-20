@@ -126,23 +126,151 @@ window.PP = (() => {
   const PLAYER_COLORS = ['#f7a35c', '#f45fb5', '#f6e04a', '#5cc8ff', '#7be07b'];
 
   // card x/y/size \u00b7 scoreboard x/y/size \u00b7 strike boxes centre-x/y/size \u00b7 board size
-  const LAY_DEFAULT = { cx: 30, cy: 12, cs: 100, sx: 805, sy: 615, ss: 100, kx: 1350, ky: 819, ks: 100, bs: 100, sn: 100, snm: 100 };
+  const LAY_DEFAULT = { cx: 30, cy: 12, cs: 100, sx: 805, sy: 615, ss: 100, kx: 1350, ky: 819, ks: 100, bs: 100, bx: 0, by: 0, sn: 100, snm: 100 };
 
   // \u2500\u2500 Fonts: every on-screen text element has its own font, chosen on the control page \u2500\u2500
   // PRIMETIME + Designer load from fonts installed on the machine (not shipped); the rest are Google / Adobe (kit lxl2pkq).
   const FONTS = {
-    anton:       ['Anton',                    "'Anton',sans-serif", 400, 'normal'],
-    bebas:       ['Bebas Neue',               "'Bebas Neue','Anton',sans-serif", 400, 'normal'],
-    archivo:     ['Archivo Narrow Bold',      "'Archivo Narrow',sans-serif", 700, 'normal'],
-    dmsans:      ['DM Sans Bold',             "'DM Sans',sans-serif", 700, 'normal'],
-    primetime:   ['PRIMETIME + ten drop shadows (installed)', "'NPP Primetime','Anton',sans-serif", 400, 'normal'],
-    designer:    ['Designer (installed)',     "'NPP Designer','Anton',sans-serif", 400, 'normal'],
-    gothic:      ['Gothic Open Shaded',       "'gothic-open-shaded','Anton',sans-serif", 400, 'normal'],
-    roboto:      ['Roboto Bold',              "'roboto',sans-serif", 700, 'normal'],
-    'roboto-r':  ['Roboto',                   "'roboto',sans-serif", 400, 'normal'],
-    'roboto-i':  ['Roboto Italic',            "'roboto',sans-serif", 400, 'italic'],
-    'roboto-xl': ['Roboto ExtraLight',        "'roboto-extralight',sans-serif", 200, 'normal'],
-    'roboto-xli':['Roboto ExtraLight Italic', "'roboto-extralight',sans-serif", 200, 'italic'],
+    "anton": ["Anton", "'Anton',sans-serif", 400, 'normal', "Block & condensed", "Anton"],
+    "bebas": ["Bebas Neue", "'Bebas Neue',sans-serif", 400, 'normal', "Block & condensed", "Bebas+Neue"],
+    "g-oswald-700": ["Oswald Bold", "'Oswald',sans-serif", 700, 'normal', "Block & condensed", "Oswald:wght@700"],
+    "g-league-gothic-400": ["League Gothic", "'League Gothic',sans-serif", 400, 'normal', "Block & condensed", "League+Gothic"],
+    "g-fjalla-one-400": ["Fjalla One", "'Fjalla One',sans-serif", 400, 'normal', "Block & condensed", "Fjalla+One"],
+    "g-staatliches-400": ["Staatliches", "'Staatliches',sans-serif", 400, 'normal', "Block & condensed", "Staatliches"],
+    "g-teko-600": ["Teko SemiBold", "'Teko',sans-serif", 600, 'normal', "Block & condensed", "Teko:wght@600"],
+    "g-big-shoulders-display-900": ["Big Shoulders Display Black", "'Big Shoulders Display',sans-serif", 900, 'normal', "Block & condensed", "Big+Shoulders+Display:wght@900"],
+    "g-barlow-condensed-800": ["Barlow Condensed ExtraBold", "'Barlow Condensed',sans-serif", 800, 'normal', "Block & condensed", "Barlow+Condensed:wght@800"],
+    "g-barlow-condensed-800-i": ["Barlow Condensed ExtraBold Italic", "'Barlow Condensed',sans-serif", 800, 'italic', "Block & condensed", "Barlow+Condensed:ital,wght@1,800"],
+    "g-saira-condensed-800": ["Saira Condensed ExtraBold", "'Saira Condensed',sans-serif", 800, 'normal', "Block & condensed", "Saira+Condensed:wght@800"],
+    "g-roboto-condensed-800": ["Roboto Condensed ExtraBold", "'Roboto Condensed',sans-serif", 800, 'normal', "Block & condensed", "Roboto+Condensed:wght@800"],
+    "archivo": ["Archivo Narrow Bold", "'Archivo Narrow',sans-serif", 700, 'normal', "Block & condensed", "Archivo+Narrow:wght@700"],
+    "g-squada-one-400": ["Squada One", "'Squada One',sans-serif", 400, 'normal', "Block & condensed", "Squada+One"],
+    "g-six-caps-400": ["Six Caps", "'Six Caps',sans-serif", 400, 'normal', "Block & condensed", "Six+Caps"],
+    "g-antonio-700": ["Antonio Bold", "'Antonio',sans-serif", 700, 'normal', "Block & condensed", "Antonio:wght@700"],
+    "g-koulen-400": ["Koulen", "'Koulen',sans-serif", 400, 'normal', "Block & condensed", "Koulen"],
+    "g-archivo-black-400": ["Archivo Black", "'Archivo Black',sans-serif", 400, 'normal', "Heavy & impact", "Archivo+Black"],
+    "g-bowlby-one-400": ["Bowlby One", "'Bowlby One',sans-serif", 400, 'normal', "Heavy & impact", "Bowlby+One"],
+    "g-rubik-mono-one-400": ["Rubik Mono One", "'Rubik Mono One',sans-serif", 400, 'normal', "Heavy & impact", "Rubik+Mono+One"],
+    "g-russo-one-400": ["Russo One", "'Russo One',sans-serif", 400, 'normal', "Heavy & impact", "Russo+One"],
+    "g-black-han-sans-400": ["Black Han Sans", "'Black Han Sans',sans-serif", 400, 'normal', "Heavy & impact", "Black+Han+Sans"],
+    "g-dela-gothic-one-400": ["Dela Gothic One", "'Dela Gothic One',sans-serif", 400, 'normal', "Heavy & impact", "Dela+Gothic+One"],
+    "g-titan-one-400": ["Titan One", "'Titan One',sans-serif", 400, 'normal', "Heavy & impact", "Titan+One"],
+    "g-ultra-400": ["Ultra", "'Ultra',sans-serif", 400, 'normal', "Heavy & impact", "Ultra"],
+    "g-chango-400": ["Chango", "'Chango',sans-serif", 400, 'normal', "Heavy & impact", "Chango"],
+    "g-passion-one-900": ["Passion One Black", "'Passion One',sans-serif", 900, 'normal', "Heavy & impact", "Passion+One:wght@900"],
+    "g-montserrat-900": ["Montserrat Black", "'Montserrat',sans-serif", 900, 'normal', "Heavy & impact", "Montserrat:wght@900"],
+    "g-montserrat-900-i": ["Montserrat Black Italic", "'Montserrat',sans-serif", 900, 'italic', "Heavy & impact", "Montserrat:ital,wght@1,900"],
+    "g-poppins-900": ["Poppins Black", "'Poppins',sans-serif", 900, 'normal', "Heavy & impact", "Poppins:wght@900"],
+    "g-inter-900": ["Inter Black", "'Inter',sans-serif", 900, 'normal', "Heavy & impact", "Inter:wght@900"],
+    "g-archivo-900": ["Archivo Black", "'Archivo',sans-serif", 900, 'normal', "Heavy & impact", "Archivo:wght@900"],
+    "g-rubik-900": ["Rubik Black", "'Rubik',sans-serif", 900, 'normal', "Heavy & impact", "Rubik:wght@900"],
+    "g-kanit-800": ["Kanit ExtraBold", "'Kanit',sans-serif", 800, 'normal', "Heavy & impact", "Kanit:wght@800"],
+    "g-kanit-800-i": ["Kanit ExtraBold Italic", "'Kanit',sans-serif", 800, 'italic', "Heavy & impact", "Kanit:ital,wght@1,800"],
+    "g-unbounded-900": ["Unbounded Black", "'Unbounded',sans-serif", 900, 'normal', "Heavy & impact", "Unbounded:wght@900"],
+    "g-krona-one-400": ["Krona One", "'Krona One',sans-serif", 400, 'normal', "Heavy & impact", "Krona+One"],
+    "g-graduate-400": ["Graduate", "'Graduate',sans-serif", 400, 'normal', "Sporty & varsity", "Graduate"],
+    "g-holtwood-one-sc-400": ["Holtwood One SC", "'Holtwood One SC',sans-serif", 400, 'normal', "Sporty & varsity", "Holtwood+One+SC"],
+    "g-bungee-400": ["Bungee", "'Bungee',sans-serif", 400, 'normal', "Sporty & varsity", "Bungee"],
+    "g-bungee-inline-400": ["Bungee Inline", "'Bungee Inline',sans-serif", 400, 'normal', "Sporty & varsity", "Bungee+Inline"],
+    "g-bungee-shade-400": ["Bungee Shade", "'Bungee Shade',sans-serif", 400, 'normal', "Sporty & varsity", "Bungee+Shade"],
+    "g-racing-sans-one-400": ["Racing Sans One", "'Racing Sans One',sans-serif", 400, 'normal', "Sporty & varsity", "Racing+Sans+One"],
+    "g-faster-one-400": ["Faster One", "'Faster One',sans-serif", 400, 'normal', "Sporty & varsity", "Faster+One"],
+    "g-seymour-one-400": ["Seymour One", "'Seymour One',sans-serif", 400, 'normal', "Sporty & varsity", "Seymour+One"],
+    "g-contrail-one-400": ["Contrail One", "'Contrail One',sans-serif", 400, 'normal', "Sporty & varsity", "Contrail+One"],
+    "g-changa-one-400": ["Changa One", "'Changa One',sans-serif", 400, 'normal', "Sporty & varsity", "Changa+One"],
+    "g-changa-one-400-i": ["Changa One Italic", "'Changa One',sans-serif", 400, 'italic', "Sporty & varsity", "Changa+One:ital,wght@1,400"],
+    "g-days-one-400": ["Days One", "'Days One',sans-serif", 400, 'normal', "Sporty & varsity", "Days+One"],
+    "g-black-ops-one-400": ["Black Ops One", "'Black Ops One',sans-serif", 400, 'normal', "Sporty & varsity", "Black+Ops+One"],
+    "g-saira-stencil-one-400": ["Saira Stencil One", "'Saira Stencil One',sans-serif", 400, 'normal', "Sporty & varsity", "Saira+Stencil+One"],
+    "g-allerta-stencil-400": ["Allerta Stencil", "'Allerta Stencil',sans-serif", 400, 'normal', "Sporty & varsity", "Allerta+Stencil"],
+    "g-jockey-one-400": ["Jockey One", "'Jockey One',sans-serif", 400, 'normal', "Sporty & varsity", "Jockey+One"],
+    "g-teko-700": ["Teko Bold", "'Teko',sans-serif", 700, 'normal', "Sporty & varsity", "Teko:wght@700"],
+    "g-bangers-400": ["Bangers", "'Bangers',sans-serif", 400, 'normal', "Fun & comic", "Bangers"],
+    "g-luckiest-guy-400": ["Luckiest Guy", "'Luckiest Guy',sans-serif", 400, 'normal', "Fun & comic", "Luckiest+Guy"],
+    "g-lilita-one-400": ["Lilita One", "'Lilita One',sans-serif", 400, 'normal', "Fun & comic", "Lilita+One"],
+    "g-sigmar-one-400": ["Sigmar One", "'Sigmar One',sans-serif", 400, 'normal', "Fun & comic", "Sigmar+One"],
+    "g-rammetto-one-400": ["Rammetto One", "'Rammetto One',sans-serif", 400, 'normal', "Fun & comic", "Rammetto+One"],
+    "g-chewy-400": ["Chewy", "'Chewy',sans-serif", 400, 'normal', "Fun & comic", "Chewy"],
+    "g-fredoka-700": ["Fredoka Bold", "'Fredoka',sans-serif", 700, 'normal', "Fun & comic", "Fredoka:wght@700"],
+    "g-baloo-2-800": ["Baloo 2 ExtraBold", "'Baloo 2',sans-serif", 800, 'normal', "Fun & comic", "Baloo+2:wght@800"],
+    "g-londrina-solid-900": ["Londrina Solid Black", "'Londrina Solid',sans-serif", 900, 'normal', "Fun & comic", "Londrina+Solid:wght@900"],
+    "g-boogaloo-400": ["Boogaloo", "'Boogaloo',sans-serif", 400, 'normal', "Fun & comic", "Boogaloo"],
+    "g-bubblegum-sans-400": ["Bubblegum Sans", "'Bubblegum Sans',sans-serif", 400, 'normal', "Fun & comic", "Bubblegum+Sans"],
+    "g-knewave-400": ["Knewave", "'Knewave',sans-serif", 400, 'normal', "Fun & comic", "Knewave"],
+    "g-shrikhand-400": ["Shrikhand", "'Shrikhand',sans-serif", 400, 'normal', "Fun & comic", "Shrikhand"],
+    "g-righteous-400": ["Righteous", "'Righteous',sans-serif", 400, 'normal', "Fun & comic", "Righteous"],
+    "g-modak-400": ["Modak", "'Modak',sans-serif", 400, 'normal', "Fun & comic", "Modak"],
+    "g-gluten-800": ["Gluten ExtraBold", "'Gluten',sans-serif", 800, 'normal', "Fun & comic", "Gluten:wght@800"],
+    "g-rubik-bubbles-400": ["Rubik Bubbles", "'Rubik Bubbles',sans-serif", 400, 'normal', "Fun & comic", "Rubik+Bubbles"],
+    "g-coiny-400": ["Coiny", "'Coiny',sans-serif", 400, 'normal', "Fun & comic", "Coiny"],
+    "g-alfa-slab-one-400": ["Alfa Slab One", "'Alfa Slab One',sans-serif", 400, 'normal', "Slab & western", "Alfa+Slab+One"],
+    "g-rye-400": ["Rye", "'Rye',sans-serif", 400, 'normal', "Slab & western", "Rye"],
+    "g-sancreek-400": ["Sancreek", "'Sancreek',sans-serif", 400, 'normal', "Slab & western", "Sancreek"],
+    "g-bevan-400": ["Bevan", "'Bevan',sans-serif", 400, 'normal', "Slab & western", "Bevan"],
+    "g-arvo-700": ["Arvo Bold", "'Arvo',sans-serif", 700, 'normal', "Slab & western", "Arvo:wght@700"],
+    "g-zilla-slab-700": ["Zilla Slab Bold", "'Zilla Slab',sans-serif", 700, 'normal', "Slab & western", "Zilla+Slab:wght@700"],
+    "g-abril-fatface-400": ["Abril Fatface", "'Abril Fatface',sans-serif", 400, 'normal', "Slab & western", "Abril+Fatface"],
+    "g-playfair-display-900": ["Playfair Display Black", "'Playfair Display',sans-serif", 900, 'normal', "Slab & western", "Playfair+Display:wght@900"],
+    "g-playfair-display-900-i": ["Playfair Display Black Italic", "'Playfair Display',sans-serif", 900, 'italic', "Slab & western", "Playfair+Display:ital,wght@1,900"],
+    "g-chonburi-400": ["Chonburi", "'Chonburi',sans-serif", 400, 'normal', "Slab & western", "Chonburi"],
+    "g-ewert-400": ["Ewert", "'Ewert',sans-serif", 400, 'normal', "Slab & western", "Ewert"],
+    "g-smokum-400": ["Smokum", "'Smokum',sans-serif", 400, 'normal', "Slab & western", "Smokum"],
+    "g-orbitron-900": ["Orbitron Black", "'Orbitron',sans-serif", 900, 'normal', "Tech & retro", "Orbitron:wght@900"],
+    "g-audiowide-400": ["Audiowide", "'Audiowide',sans-serif", 400, 'normal', "Tech & retro", "Audiowide"],
+    "g-zen-dots-400": ["Zen Dots", "'Zen Dots',sans-serif", 400, 'normal', "Tech & retro", "Zen+Dots"],
+    "g-michroma-400": ["Michroma", "'Michroma',sans-serif", 400, 'normal', "Tech & retro", "Michroma"],
+    "g-monoton-400": ["Monoton", "'Monoton',sans-serif", 400, 'normal', "Tech & retro", "Monoton"],
+    "g-press-start-2p-400": ["Press Start 2P", "'Press Start 2P',sans-serif", 400, 'normal', "Tech & retro", "Press+Start+2P"],
+    "g-silkscreen-700": ["Silkscreen Bold", "'Silkscreen',sans-serif", 700, 'normal', "Tech & retro", "Silkscreen:wght@700"],
+    "g-vt323-400": ["VT323", "'VT323',sans-serif", 400, 'normal', "Tech & retro", "VT323"],
+    "g-goldman-700": ["Goldman Bold", "'Goldman',sans-serif", 700, 'normal', "Tech & retro", "Goldman:wght@700"],
+    "g-chakra-petch-700": ["Chakra Petch Bold", "'Chakra Petch',sans-serif", 700, 'normal', "Tech & retro", "Chakra+Petch:wght@700"],
+    "g-exo-2-900": ["Exo 2 Black", "'Exo 2',sans-serif", 900, 'normal', "Tech & retro", "Exo+2:wght@900"],
+    "g-exo-2-900-i": ["Exo 2 Black Italic", "'Exo 2',sans-serif", 900, 'italic', "Tech & retro", "Exo+2:ital,wght@1,900"],
+    "g-turret-road-800": ["Turret Road ExtraBold", "'Turret Road',sans-serif", 800, 'normal', "Tech & retro", "Turret+Road:wght@800"],
+    "g-syncopate-700": ["Syncopate Bold", "'Syncopate',sans-serif", 700, 'normal', "Tech & retro", "Syncopate:wght@700"],
+    "g-tilt-warp-400": ["Tilt Warp", "'Tilt Warp',sans-serif", 400, 'normal', "Tech & retro", "Tilt+Warp"],
+    "g-tilt-prism-400": ["Tilt Prism", "'Tilt Prism',sans-serif", 400, 'normal', "Tech & retro", "Tilt+Prism"],
+    "g-major-mono-display-400": ["Major Mono Display", "'Major Mono Display',sans-serif", 400, 'normal', "Tech & retro", "Major+Mono+Display"],
+    "g-permanent-marker-400": ["Permanent Marker", "'Permanent Marker',sans-serif", 400, 'normal', "Script & marker", "Permanent+Marker"],
+    "g-pacifico-400": ["Pacifico", "'Pacifico',sans-serif", 400, 'normal', "Script & marker", "Pacifico"],
+    "g-lobster-400": ["Lobster", "'Lobster',sans-serif", 400, 'normal', "Script & marker", "Lobster"],
+    "g-yellowtail-400": ["Yellowtail", "'Yellowtail',sans-serif", 400, 'normal', "Script & marker", "Yellowtail"],
+    "g-kaushan-script-400": ["Kaushan Script", "'Kaushan Script',sans-serif", 400, 'normal', "Script & marker", "Kaushan+Script"],
+    "g-damion-400": ["Damion", "'Damion',sans-serif", 400, 'normal', "Script & marker", "Damion"],
+    "g-great-vibes-400": ["Great Vibes", "'Great Vibes',sans-serif", 400, 'normal', "Script & marker", "Great+Vibes"],
+    "g-oleo-script-700": ["Oleo Script Bold", "'Oleo Script',sans-serif", 700, 'normal', "Script & marker", "Oleo+Script:wght@700"],
+    "g-caveat-brush-400": ["Caveat Brush", "'Caveat Brush',sans-serif", 400, 'normal', "Script & marker", "Caveat+Brush"],
+    "g-rock-salt-400": ["Rock Salt", "'Rock Salt',sans-serif", 400, 'normal', "Script & marker", "Rock+Salt"],
+    "g-marck-script-400": ["Marck Script", "'Marck Script',sans-serif", 400, 'normal', "Script & marker", "Marck+Script"],
+    "g-sedgwick-ave-display-400": ["Sedgwick Ave Display", "'Sedgwick Ave Display',sans-serif", 400, 'normal', "Script & marker", "Sedgwick+Ave+Display"],
+    "g-covered-by-your-grace-400": ["Covered By Your Grace", "'Covered By Your Grace',sans-serif", 400, 'normal', "Script & marker", "Covered+By+Your+Grace"],
+    "dmsans": ["DM Sans Bold", "'DM Sans',sans-serif", 700, 'normal', "Clean", "DM+Sans:wght@700"],
+    "g-inter-700": ["Inter Bold", "'Inter',sans-serif", 700, 'normal', "Clean", "Inter:wght@700"],
+    "g-space-grotesk-700": ["Space Grotesk Bold", "'Space Grotesk',sans-serif", 700, 'normal', "Clean", "Space+Grotesk:wght@700"],
+    "g-manrope-800": ["Manrope ExtraBold", "'Manrope',sans-serif", 800, 'normal', "Clean", "Manrope:wght@800"],
+    "g-outfit-800": ["Outfit ExtraBold", "'Outfit',sans-serif", 800, 'normal', "Clean", "Outfit:wght@800"],
+    "g-lexend-800": ["Lexend ExtraBold", "'Lexend',sans-serif", 800, 'normal', "Clean", "Lexend:wght@800"],
+    "g-work-sans-800": ["Work Sans ExtraBold", "'Work Sans',sans-serif", 800, 'normal', "Clean", "Work+Sans:wght@800"],
+    "g-barlow-800": ["Barlow ExtraBold", "'Barlow',sans-serif", 800, 'normal', "Clean", "Barlow:wght@800"],
+    "g-bricolage-grotesque-800": ["Bricolage Grotesque ExtraBold", "'Bricolage Grotesque',sans-serif", 800, 'normal', "Clean", "Bricolage+Grotesque:wght@800"],
+    "g-syne-800": ["Syne ExtraBold", "'Syne',sans-serif", 800, 'normal', "Clean", "Syne:wght@800"],
+    "g-archivo-700": ["Archivo Bold", "'Archivo',sans-serif", 700, 'normal', "Clean", "Archivo:wght@700"],
+    primetime:   ['PRIMETIME + ten drop shadows (installed)', "'NPP Primetime','Anton',sans-serif", 400, 'normal', 'Your fonts', null],
+    designer:    ['Designer (installed)', "'NPP Designer','Anton',sans-serif", 400, 'normal', 'Your fonts', null],
+    gothic:      ['Gothic Open Shaded (Adobe)', "'gothic-open-shaded','Anton',sans-serif", 400, 'normal', 'Your fonts', null],
+    roboto:      ['Roboto Bold (Adobe)', "'roboto',sans-serif", 700, 'normal', 'Your fonts', null],
+    'roboto-r':  ['Roboto (Adobe)', "'roboto',sans-serif", 400, 'normal', 'Your fonts', null],
+    'roboto-i':  ['Roboto Italic (Adobe)', "'roboto',sans-serif", 400, 'italic', 'Your fonts', null],
+    'roboto-xl': ['Roboto ExtraLight (Adobe)', "'roboto-extralight',sans-serif", 200, 'normal', 'Your fonts', null],
+    'roboto-xli':['Roboto ExtraLight Italic (Adobe)', "'roboto-extralight',sans-serif", 200, 'italic', 'Your fonts', null],
+    'sys-impact':  ['Impact', "Impact,'Anton',sans-serif", 400, 'normal', 'On this computer', null],
+    'sys-arialblack': ['Arial Black', "'Arial Black','Archivo Black',sans-serif", 900, 'normal', 'On this computer', null],
+    'sys-futura':  ['Futura Bold', "Futura,'Montserrat',sans-serif", 700, 'normal', 'On this computer', null],
+    'sys-avenircond': ['Avenir Next Condensed Heavy', "'Avenir Next Condensed','Barlow Condensed',sans-serif", 800, 'normal', 'On this computer', null],
+    'sys-helvcond': ['Helvetica Neue Condensed Black', "'Helvetica Neue','Roboto Condensed',sans-serif", 900, 'normal', 'On this computer', null],
+    'sys-copperplate': ['Copperplate', "Copperplate,'Cinzel',serif", 700, 'normal', 'On this computer', null],
+    'sys-markerfelt': ['Marker Felt', "'Marker Felt','Permanent Marker',sans-serif", 700, 'normal', 'On this computer', null],
   };
   // [key, label, default, group]
   const FONT_SLOTS = [
@@ -160,6 +288,14 @@ window.PP = (() => {
     ['boardHead', 'Board title', 'anton', 'Full board'],
     ['board', 'Board names', 'archivo', 'Full board'],
   ];
+  const fontLinks = new Set();
+  function ensureFont(key) {           // Google fonts load only when picked
+    const d = FONTS[key]; if (!d || !d[5] || fontLinks.has(d[5])) return;
+    fontLinks.add(d[5]);
+    const l = document.createElement('link'); l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=' + d[5] + '&display=block';
+    document.head.appendChild(l);
+  }
   const fontDefaults = () => Object.fromEntries(FONT_SLOTS.map(f => [f[0], f[2]]));
 
   // \u2500\u2500 Teams: colours + era-correct abbreviations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -225,21 +361,40 @@ window.PP = (() => {
       title: $('.pp-title'), score: $('.pp-score'), strikes: $('.pp-strikes'), board: $('.pp-board') };
     let lastCardKey = '', lastScores = {}, lastStrikes = {}, lastBoardKey = '';
     let latest = null, waitingKey = '', lastPre = '', rankState = 'shown';
-    // sounds play only on a stage created with {sound:true} (the OBS display), never for the state replayed on connect
-    const born = Date.now(); let sfxCfg = null; const audio = {};
+    // Sounds play only on a stage created with {sound:true} (the OBS display), never for the state replayed on connect.
+    // All 25 whooshes are fetched + decoded up front into Web Audio buffers, so a whoosh starts on the same frame as
+    // its card (HTML <audio> has to fetch/decode on first play, which is what put them out of sync).
+    const born = Date.now(); let sfxCfg = null; const audio = {}, buffers = {}; let actx = null;
+    const SFX_NAMES = Array.from({ length: 25 }, (_, i) => 'whoosh-' + String(i + 1).padStart(2, '0'));
+    if (opts.sound) {
+      try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
+      SFX_NAMES.forEach(n => {
+        const el = new Audio('sfx/' + n + '.m4a'); el.preload = 'auto'; audio[n] = el;      // fallback path
+        if (actx) fetch('sfx/' + n + '.m4a').then(r => r.arrayBuffer()).then(b => new Promise((ok, no) => actx.decodeAudioData(b, ok, no))).then(buf => { buffers[n] = buf; }).catch(() => {});
+      });
+      const wake = () => { if (actx && actx.state !== 'running') actx.resume().catch(() => {}); };
+      wake(); ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, wake));
+    }
     function sfx(kind) {
       if (!opts.sound || !sfxCfg || !sfxCfg.on || Date.now() - born < 2500) return;
       const name = sfxCfg[kind]; if (!name) return;
+      const vol = Math.max(0, Math.min(1, (sfxCfg.vol ?? 80) / 100));
       try {
+        if (actx && actx.state === 'running' && buffers[name]) {
+          const src = actx.createBufferSource(), g = actx.createGain();
+          src.buffer = buffers[name]; g.gain.value = vol; src.connect(g).connect(actx.destination); src.start();
+          return;
+        }
         const a = audio[name] || (audio[name] = new Audio('sfx/' + name + '.m4a'));
-        a.volume = Math.max(0, Math.min(1, (sfxCfg.vol ?? 80) / 100)); a.currentTime = 0; a.play().catch(() => {});
+        a.volume = vol; a.currentTime = 0; a.play().catch(() => {});
       } catch {}
     }
+    let soundedCard = null;
     const loaded = new Set();   // src+mode that finished loading (ok or not)
     const frames = new Map();   // src -> {x,y,w,h}: cutout placement measured from the image's own pixels
     const failed = new Set();   // photos that would not load: draw the silhouette, never a broken-image icon
     const pending = new Map();  // src+mode -> promise, so a preload and a card share one fetch
-    const PH_W = 692, PH_H = 640; // photo window on the card
+    const PH_W = 724, PH_H = 650; // photo window: full card width, edge to edge
     // Load a photo before the card is drawn, so card and photo always arrive together (no img.decode(): it can hang).
     function preload(src, cutout) {
       const k = src + (cutout ? '#c' : '');
@@ -271,7 +426,7 @@ window.PP = (() => {
       for (let y = top; y < Math.min(H0, top + Math.round(H0 * 0.18)); y++) for (let x = 0; x < W0; x++) if (solid(x, y)) { sx += x; sn++; }
       const headX = sn ? sx / sn / W0 : 0.5;
       const topF = top / H0;
-      const HEAD_TOP = 92, BOTTOM = 700;
+      const HEAD_TOP = 96, BOTTOM = 730;
       const h = Math.min((BOTTOM - HEAD_TOP) / Math.max(0.35, 1 - topF), 1250);
       const w = h * im.naturalWidth / im.naturalHeight;
       return { x: Math.round(PH_W / 2 - headX * w), y: Math.round(HEAD_TOP - topF * h), w: Math.round(w), h: Math.round(h) };
@@ -299,6 +454,7 @@ window.PP = (() => {
         return;
       }
       el.cardwrap.classList.toggle('on', on);
+      if (on && soundedCard !== c.id && key === lastCardKey) { soundedCard = c.id; sfx('card'); }
       if (key === lastCardKey) { syncRank(c); return; }
       const sameId = lastCardKey.split('|')[0] === String(c.id);
       lastCardKey = key;
@@ -309,7 +465,7 @@ window.PP = (() => {
       const shade = `filter="url(#${fid})"`;   // cutouts get a soft dark drop shadow
       let photo = '';
       if (src && c.photo) photo = `<image href="${esc(src)}" x="0" y="0" width="${PH_W}" height="${PH_H}" preserveAspectRatio="xMidYMin slice" ${gray}/>`;
-      else if (src) { const f = frames.get(src) || (c.espn ? { x: -170, y: 80, w: 1040, h: 755 } : { x: -150, y: 15, w: 1000, h: 1000 });
+      else if (src) { const f = frames.get(src) || (c.espn ? { x: -160, y: 90, w: 1060, h: 770 } : { x: -140, y: 20, w: 1010, h: 1010 });
         photo = `<image href="${esc(src)}" ${frames.has(src) && !/^data:/.test(src) ? 'crossorigin="anonymous"' : ''} x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" preserveAspectRatio="xMidYMin meet" ${shade}/>`; }
       else photo = `<g opacity=".35" fill="#0a0a0a"><circle cx="${PH_W / 2}" cy="270" r="118"/><path d="M110 660 Q120 440 ${PH_W / 2} 425 Q${PH_W - 120} 440 ${PH_W - 110} 660Z"/></g>`;
       const tc = c.tc || ['#2b4a63', '#fbcc7a'];
@@ -361,7 +517,8 @@ window.PP = (() => {
           </div>
         </div>`;
       fitText(el.card);
-      if (!sameId) { el.card.classList.remove('enter'); void el.card.offsetWidth; el.card.classList.add('enter'); sfx('card'); }
+      if (!sameId) { el.card.classList.remove('enter'); void el.card.offsetWidth; el.card.classList.add('enter'); }
+      if (on && soundedCard !== c.id) { soundedCard = c.id; sfx('card'); }
     }
     // star-wipe the rank in when the producer reveals it (no full re-render, so the card doesn't re-animate)
     function syncRank(c) {
@@ -439,7 +596,7 @@ window.PP = (() => {
       const sig = JSON.stringify(F); if (sig === fontSig) return; fontSig = sig;
       const st = el.stage.style;
       FONT_SLOTS.forEach(([k]) => {
-        const d = FONTS[F[k]] || FONTS.anton;
+        const d = FONTS[F[k]] || FONTS.anton; ensureFont(F[k]);
         st.setProperty('--ff-' + k, d[1]); st.setProperty('--fw-' + k, d[2]); st.setProperty('--fs-' + k, d[3]);
         if (F[k] === 'primetime') el.stage.setAttribute('data-fx-' + k.toLowerCase(), ''); else el.stage.removeAttribute('data-fx-' + k.toLowerCase());
         if (document.fonts && document.fonts.load) document.fonts.load(`${d[3]} ${d[2]} 40px ${d[1].split(',')[0]}`).then(refit, () => {});
@@ -451,7 +608,7 @@ window.PP = (() => {
       el.cardwrap.style.transform = `translate(${L.cx}px,${L.cy}px) scale(${L.cs / 100})`;
       el.sbwrap.style.transform = `translate(${L.sx}px,${L.sy}px) scale(${L.ss / 100})`;
       el.kwrap.style.transform = `translate(${L.kx}px,${L.ky}px) scale(${L.ks / 100})`;
-      el.board.style.transform = el.board.classList.contains('on') ? `scale(${L.bs / 100})` : `scale(${L.bs / 100 * 0.96})`;
+      el.board.style.transform = `translate(${L.bx || 0}px,${L.by || 0}px) scale(${L.bs / 100 * (el.board.classList.contains('on') ? 1 : 0.96)})`;
     }
 
     function render(S) {
@@ -525,5 +682,5 @@ window.PP = (() => {
   }
 
   return { W, H, IDX, STATS, STAT_GROUPS, statValue, norm, normHy, lastName, rankRows, cutTop, computeList, subtitleFor,
-    fmtVal, headshotUrl, esc, CARD_THEMES, PLAYER_COLORS, LAY_DEFAULT, createStage, fitStage, FONTS, FONT_SLOTS, fontDefaults, TEAM_COLORS, teamColors, teamLabel, teamStints, hubOf, publisher, fetchRoom, subscribe };
+    fmtVal, headshotUrl, esc, CARD_THEMES, PLAYER_COLORS, LAY_DEFAULT, createStage, fitStage, FONTS, FONT_SLOTS, fontDefaults, ensureFont, TEAM_COLORS, teamColors, teamLabel, teamStints, hubOf, publisher, fetchRoom, subscribe };
 })();
