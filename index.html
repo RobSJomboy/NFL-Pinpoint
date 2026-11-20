@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="pp.css?v=9">
+<link rel="stylesheet" href="pp.css?v=10">
 <style>
   :root { --navy:#0d1f2d; --navy2:#13293b; --navy3:#1b3850; --line:#24425c; --gold:#fbcc7a; --ink:#eef3f8; --dim:#9fb2c4; --red:#ff5a5f; --green:#3ddc84; }
   * { box-sizing:border-box; }
@@ -205,6 +205,12 @@
     </div>
     <div class="row"><button class="sm" id="saveCur">Save list to library</button><button class="sm" id="exportCsv">Export CSV</button></div>
 
+    <h2>Rank reveal &amp; sounds</h2>
+    <div class="row"><label class="inl" style="flex:1">Reveal <select id="revealMode" style="flex:1"><option value="manual">Star wipe when I press R</option><option value="auto">Star wipe 1.8s after the card</option><option value="instant">Show with the card</option></select></label></div>
+    <div class="row"><label class="inl"><input type="checkbox" id="sfxOn"> Whooshes on the OBS display</label><input type="range" id="sfxVol" min="0" max="100" style="flex:1"></div>
+    <div class="row"><span class="lbl" style="margin:0;width:70px">Card in</span><select id="sfxCard" style="flex:1"><option value="whoosh-01">Whoosh 1</option><option value="whoosh-02">Whoosh 2</option><option value="whoosh-03">Whoosh 3</option><option value="whoosh-04">Whoosh 4</option><option value="whoosh-05">Whoosh 5</option><option value="whoosh-06">Whoosh 6</option><option value="whoosh-07">Whoosh 7</option><option value="whoosh-08">Whoosh 8</option><option value="whoosh-09">Whoosh 9</option><option value="whoosh-10">Whoosh 10</option><option value="whoosh-11">Whoosh 11</option><option value="whoosh-12">Whoosh 12</option><option value="whoosh-13">Whoosh 13</option><option value="whoosh-14">Whoosh 14</option><option value="whoosh-15">Whoosh 15</option><option value="whoosh-16">Whoosh 16</option><option value="whoosh-17">Whoosh 17</option><option value="whoosh-18">Whoosh 18</option><option value="whoosh-19">Whoosh 19</option><option value="whoosh-20">Whoosh 20</option><option value="whoosh-21">Whoosh 21</option><option value="whoosh-22">Whoosh 22</option><option value="whoosh-23">Whoosh 23</option><option value="whoosh-24">Whoosh 24</option><option value="whoosh-25">Whoosh 25</option></select><button class="sm" data-play="sfxCard">▶</button></div>
+    <div class="row"><span class="lbl" style="margin:0;width:70px">Rank wipe</span><select id="sfxReveal" style="flex:1"><option value="whoosh-01">Whoosh 1</option><option value="whoosh-02">Whoosh 2</option><option value="whoosh-03">Whoosh 3</option><option value="whoosh-04">Whoosh 4</option><option value="whoosh-05">Whoosh 5</option><option value="whoosh-06">Whoosh 6</option><option value="whoosh-07">Whoosh 7</option><option value="whoosh-08">Whoosh 8</option><option value="whoosh-09">Whoosh 9</option><option value="whoosh-10">Whoosh 10</option><option value="whoosh-11">Whoosh 11</option><option value="whoosh-12">Whoosh 12</option><option value="whoosh-13">Whoosh 13</option><option value="whoosh-14">Whoosh 14</option><option value="whoosh-15">Whoosh 15</option><option value="whoosh-16">Whoosh 16</option><option value="whoosh-17">Whoosh 17</option><option value="whoosh-18">Whoosh 18</option><option value="whoosh-19">Whoosh 19</option><option value="whoosh-20">Whoosh 20</option><option value="whoosh-21">Whoosh 21</option><option value="whoosh-22">Whoosh 22</option><option value="whoosh-23">Whoosh 23</option><option value="whoosh-24">Whoosh 24</option><option value="whoosh-25">Whoosh 25</option></select><button class="sm" data-play="sfxReveal">▶</button></div>
+
     <h2>Contestants</h2>
     <div id="playersEd"></div>
     <div class="row"><button class="sm" id="addP">+ Add</button><button class="sm" id="remP">− Remove</button></div>
@@ -231,6 +237,7 @@
     </div>
     <div id="result">Load a list, set your contestants, and start typing names.</div>
     <div class="btns">
+      <button id="bRank" class="gold">★ Reveal rank<span class="kbd">R</span></button>
       <button id="bCard">Card<span class="kbd">C</span></button>
       <button id="bScore">Scoreboard<span class="kbd">S</span></button>
       <button id="bStrikes">Strike boxes<span class="kbd">X</span></button>
@@ -290,9 +297,9 @@
   </div>
 </dialog>
 
-<script src="pp.js?v=9"></script>
-<script src="fpdata.js?v=9"></script>
-<script src="players.js?v=9"></script>
+<script src="pp.js?v=10"></script>
+<script src="fpdata.js?v=10"></script>
+<script src="players.js?v=10"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -331,17 +338,19 @@
     players: LS.get('players', [{ name:'Dalton', color:PP.PLAYER_COLORS[0] }, { name:'Justin', color:PP.PLAYER_COLORS[1] }, { name:'Shelfy', color:PP.PLAYER_COLORS[2] }]).map(p => ({ name:p.name, color:p.color, score:0, strikes:0, out:false })),
     maxStrikes: LS.get('strikes', 3), order: LS.get('order', 'snake'), themeMode: LS.get('themeMode', 'rotate'),
     turn: 0, dir: 1, guesses: [], misses: [], card: null, cardN: 0,
+    revealMode: LS.get('revealMode', 'manual'), pending: null,
+    sfx: Object.assign({ on: true, vol: 80, card: 'whoosh-01', reveal: 'whoosh-07' }, LS.get('sfx', {})),
     show: Object.assign({ card:true, score:true, strikes:true, turn:true, title:false, board:false }, LS.get('show', {})),
     layout: Object.assign({}, PP.LAY_DEFAULT, LS.get('layout', {})),
   };
   const undoStack = [];
-  const snap = () => JSON.stringify({ players: G.players, turn: G.turn, dir: G.dir, guesses: G.guesses, misses: G.misses, card: G.card, cardN: G.cardN, showCard: G.show.card, showBoard: G.show.board,
+  const snap = () => JSON.stringify({ pending: G.pending, players: G.players, turn: G.turn, dir: G.dir, guesses: G.guesses, misses: G.misses, card: G.card, cardN: G.cardN, showCard: G.show.card, showBoard: G.show.board,
     found: G.list ? G.list.rows.map(r => [r.found, r.rv]) : [] });
   function pushUndo() { undoStack.push(snap()); if (undoStack.length > 200) undoStack.shift(); }
   function undo() {
     const s = undoStack.pop(); if (!s) return flash('Nothing to undo', 'warn');
     const o = JSON.parse(s);
-    Object.assign(G, { players: o.players, turn: o.turn, dir: o.dir, guesses: o.guesses, misses: o.misses, card: o.card, cardN: o.cardN });
+    Object.assign(G, { pending: o.pending || null, players: o.players, turn: o.turn, dir: o.dir, guesses: o.guesses, misses: o.misses, card: o.card, cardN: o.cardN });
     G.show.card = o.showCard; G.show.board = o.showBoard;
     if (G.list) G.list.rows.forEach((r, i) => { [r.found, r.rv] = o.found[i] || [null, false]; });
     flash('Undone', 'warn'); log('↶ undo'); renderAll(); publish();
@@ -360,7 +369,8 @@
     const L = G.list;
     return {
       app: 'npp', pre: G.pre || [], show: G.show, card: G.card && G.card.hold ? null : G.card, turn: G.turn, maxStrikes: G.maxStrikes, layout: G.layout,
-      players: G.players.map(p => ({ name: p.name, color: p.color, score: p.score, strikes: p.strikes, out: p.out })),
+      players: G.players.map((p, i) => ({ name: p.name, color: p.color, score: p.score - (G.pending && G.pending.who === i ? G.pending.pts : 0), strikes: p.strikes, out: p.out })),
+      sfx: G.sfx,
       title: L ? L.title : '', sub: L ? L.sub : '', cardLabel: L ? L.label : '', size: L ? L.size : '',
       board: G.show.board && L ? L.rows.map(r => ({ r: r.dr, n: r.found != null || r.rv ? r.name : '', v: r.found != null || r.rv ? r.val : '', c: r.found != null ? G.players[r.found]?.color : '', rv: !!r.rv && r.found == null })) : null,
     };
@@ -841,6 +851,7 @@
     who = who ?? G.turn;
     if (row.found != null) return flash(`<b>${PP.esc(row.name)}</b> was already named by ${PP.esc(G.players[row.found].name)} — no strike.`, 'warn');
     pushUndo();
+    G.pending = null;                          // a new pick commits any rank still hidden
     const p = G.players[who];
     const pts = row.rank;
     p.score += pts; row.found = who; row.rv = false;
@@ -848,8 +859,13 @@
     G.cardN++;
     const pinpoint = row.rank === G.list.maxRank;
     const rare = !pinpoint && row.rank >= Math.ceil(G.list.size * 0.9);
-    G.card = attachImg(Object.assign({ id: G.cardN, kind: 'hit', name: row.name, val: row.val, rank: row.rank, dr: row.dr, pinpoint, rare, who: p.name, whoColor: p.color, pts }, teamsFor(row)), row);
+    const shown = G.revealMode === 'instant';
+    G.card = attachImg(Object.assign({ id: G.cardN, kind: 'hit', name: row.name, val: row.val, rank: row.rank, dr: row.dr, pinpoint, rare, who: p.name, whoColor: p.color, pts, rankShown: shown }, teamsFor(row)), row);
     G.show.card = true;
+    if (!shown) {
+      G.pending = { who, pts };                // scoreboard waits for the reveal so it can't give the rank away
+      if (G.revealMode === 'auto') { const id = G.cardN; setTimeout(() => { if (G.card && G.card.id === id) revealRank(); }, 1800); }
+    }
     flash(`✓ <b>${PP.esc(row.name)}</b> — #${PP.esc(row.dr)} · ${PP.esc(PP.fmtVal(row.val))} · <b>+${pts}</b> to ${PP.esc(p.name)}${pinpoint ? ' · <b>PINPOINT!</b>' : rare ? ' · rare find' : ''}`, 'hit');
     log(`✓ ${p.name}: ${row.name} #${row.dr} +${pts}`, 'h');
     advance(); afterAction();
@@ -857,6 +873,7 @@
   function strike(name, kp, who) {
     who = who ?? G.turn;
     pushUndo();
+    G.pending = null;
     const p = G.players[who];
     p.strikes++;
     if (G.maxStrikes > 0 && p.strikes >= G.maxStrikes) p.out = true;
@@ -873,6 +890,12 @@
     flash(`✕ STRIKE ${p.strikes}${G.maxStrikes ? '/' + G.maxStrikes : ''} on ${PP.esc(p.name)}${name ? ` — <b>${PP.esc(name)}</b> ${rank ? `is #${rank} (${PP.esc(PP.fmtVal(val))})` : 'is not on the list'}` : ''}${p.out ? ' — <b>OUT</b>' : ''}`, 'miss');
     log(`✕ ${p.name}: ${name || 'strike'}${rank ? ' (#' + rank + ')' : ''}${p.out ? ' — OUT' : ''}`, 'm');
     advance(); afterAction();
+  }
+  function revealRank() {
+    if (!G.card || G.card.kind !== 'hit' || G.card.rankShown !== false) return;
+    if (G.card.hold) { const id = G.card.id; return setTimeout(() => { if (G.card && G.card.id === id) revealRank(); }, 300); }
+    G.card = Object.assign({}, G.card, { rankShown: true }); G.pending = null;
+    renderLive(); renderButtons(); publish();
   }
   function afterAction() {
     $('gIn').value = ''; hideSugg();
@@ -921,6 +944,15 @@
   gIn.addEventListener('blur', () => setTimeout(hideSugg, 150));
   function suggest_hl() { sugg.querySelectorAll('[data-i]').forEach((d, i) => d.classList.toggle('sel', i === sSel)); }
 
+  // ── reveal + sound settings ─────────────────────────────────────────────
+  $('revealMode').value = G.revealMode;
+  $('revealMode').onchange = () => { G.revealMode = $('revealMode').value; LS.set('revealMode', G.revealMode); };
+  $('sfxOn').checked = G.sfx.on; $('sfxVol').value = G.sfx.vol; $('sfxCard').value = G.sfx.card; $('sfxReveal').value = G.sfx.reveal;
+  const saveSfx = () => { G.sfx = { on: $('sfxOn').checked, vol: +$('sfxVol').value, card: $('sfxCard').value, reveal: $('sfxReveal').value }; LS.set('sfx', G.sfx); publish(); };
+  ['sfxOn', 'sfxVol', 'sfxCard', 'sfxReveal'].forEach(id => $(id).addEventListener('change', saveSfx));
+  document.querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const a = new Audio('sfx/' + $(b.dataset.play).value + '.m4a'); a.volume = +$('sfxVol').value / 100; a.play().catch(() => {}); });
+  $('bRank').onclick = revealRank;
+
   // ── controls ────────────────────────────────────────────────────────────
   const toggles = { bCard: 'card', bScore: 'score', bStrikes: 'strikes', bTurn: 'turn', bTitle: 'title', bBoard: 'board' };
   Object.entries(toggles).forEach(([id, k]) => $(id).onclick = () => toggle(k));
@@ -932,6 +964,7 @@
   $('bReveal').onclick = () => { if (confirm('Reveal every unnamed player on the board?')) revealRest(); };
   document.addEventListener('keydown', e => {
     if (e.target.matches('input, textarea, select') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key.toLowerCase() === 'r') { e.preventDefault(); revealRank(); return; }
     const m = { c: 'card', s: 'score', x: 'strikes', t: 'turn', b: 'board' }[e.key.toLowerCase()];
     if (m) { e.preventDefault(); toggle(m); }
     else if (e.key === 'ArrowLeft') setTurn(G.turn - 1);
@@ -1017,10 +1050,10 @@
   }, { passive: false });
 
   // ── render control ──────────────────────────────────────────────────────
-  function renderButtons() { Object.entries(toggles).forEach(([id, k]) => $(id).classList.toggle('on', !!G.show[k])); }
+  function renderButtons() { Object.entries(toggles).forEach(([id, k]) => $(id).classList.toggle('on', !!G.show[k])); const w = !!(G.card && G.card.rankShown === false); $('bRank').disabled = !w; $('bRank').style.opacity = w ? 1 : .45; }
   function renderLive() {
     $('plLive').innerHTML = G.players.map((p, i) => `<div class="pl${i === G.turn && !p.out ? ' turn' : ''}${p.out ? ' out' : ''}" style="--pc:${p.color}" data-t="${i}">
-      <div class="nm">${i === G.turn && !p.out ? '▶ ' : ''}${PP.esc(p.name)}</div><div class="sc">${p.score}</div>
+      <div class="nm">${i === G.turn && !p.out ? '▶ ' : ''}${PP.esc(p.name)}</div><div class="sc">${p.score}${G.pending && G.pending.who === i ? `<span style="font:500 12px 'DM Mono';color:var(--gold)"> +${G.pending.pts} on reveal</span>` : ''}</div>
       <div class="xs">${G.maxStrikes ? '✕'.repeat(p.strikes) + '<span style="color:#456">' + '□'.repeat(Math.max(0, G.maxStrikes - p.strikes)) + '</span>' : '✕ ' + p.strikes}</div>
       <div class="adj"><button data-s="${i}" title="Remove a strike">−✕</button><button data-o="${i}" title="Toggle out">${p.out ? 'in' : 'out'}</button></div></div>`).join('');
     $('plLive').querySelectorAll('.pl').forEach(d => d.onclick = e => { if (e.target.closest('button')) return; setTurn(+d.dataset.t); });

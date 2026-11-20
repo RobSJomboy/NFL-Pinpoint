@@ -32,7 +32,12 @@ Three strikes and you're out. Naming the very last player on the list is a **PIN
    - Already named, or an ambiguous last name: no strike, same as the site.
 5. Clicking a row in the answer key also awards it to whoever is picking.
 
-Keys (outside the text box): `C` card · `S` scoreboard · `X` strike boxes · `T` turn arrow · `B` full board ·
+**Rank reveal:** a correct pick puts the card up with the rank hidden — and the points held back on the scoreboard — until
+you press **★ Reveal rank** (or `R`); the rank then star-wipes in with a whoosh. Switch to *auto* (1.8s) or *show with the card*
+under **Rank reveal & sounds**, where you also pick which of the 25 whooshes (in `sfx/`) plays for the card and the wipe.
+OBS: tick *Control audio via OBS* on the browser source to hear them; add `&mute` to the display URL to silence it.
+
+Keys (outside the text box): `R` reveal rank · `C` card · `S` scoreboard · `X` strike boxes · `T` turn arrow · `B` full board ·
 `←/→` change picker · `U` undo · `Enter` or `/` jumps to the name box.
 
 ## Layout

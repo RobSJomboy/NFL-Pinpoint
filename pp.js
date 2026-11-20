@@ -175,7 +175,7 @@ window.PP = (() => {
 
   // \u2500\u2500 Renderer \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   // state = { seq, show:{card,score,strikes,board,title,turn}, card, players[], turn, maxStrikes, title, sub, size, board, layout, theme }
-  function createStage(host) {
+  function createStage(host, opts = {}) {
     host.innerHTML = `
       <div class="pp-stage">
         <div class="pp-cardwrap"><div class="pp-card"></div></div>
@@ -190,7 +190,17 @@ window.PP = (() => {
     const el = { stage: $('.pp-stage'), cardwrap: $('.pp-cardwrap'), card: $('.pp-card'), sbwrap: $('.pp-sbwrap'), kwrap: $('.pp-kwrap'),
       title: $('.pp-title'), score: $('.pp-score'), strikes: $('.pp-strikes'), board: $('.pp-board') };
     let lastCardKey = '', lastScores = {}, lastStrikes = {}, lastBoardKey = '';
-    let latest = null, waitingKey = '', lastPre = '';
+    let latest = null, waitingKey = '', lastPre = '', rankState = 'shown';
+    // sounds play only on a stage created with {sound:true} (the OBS display), never for the state replayed on connect
+    const born = Date.now(); let sfxCfg = null; const audio = {};
+    function sfx(kind) {
+      if (!opts.sound || !sfxCfg || !sfxCfg.on || Date.now() - born < 2500) return;
+      const name = sfxCfg[kind]; if (!name) return;
+      try {
+        const a = audio[name] || (audio[name] = new Audio('sfx/' + name + '.m4a'));
+        a.volume = Math.max(0, Math.min(1, (sfxCfg.vol ?? 80) / 100)); a.currentTime = 0; a.play().catch(() => {});
+      } catch {}
+    }
     const loaded = new Set();   // src+mode that finished loading (ok or not)
     const frames = new Map();   // src -> {x,y,w,h}: cutout placement measured from the image's own pixels
     const failed = new Set();   // photos that would not load: draw the silhouette, never a broken-image icon
@@ -254,14 +264,14 @@ window.PP = (() => {
         return;
       }
       el.cardwrap.classList.toggle('on', on);
-      if (key === lastCardKey) return;
+      if (key === lastCardKey) { syncRank(c); return; }
       const sameId = lastCardKey.split('|')[0] === String(c.id);
       lastCardKey = key;
       const miss = c.kind === 'miss';
       const src = c.img && !failed.has(c.img) ? c.img : '';
       const gray = miss ? 'filter="url(#jcGray)"' : '';
       const fid = 'jcSh' + String(c.id).replace(/\W/g, '');
-      const shade = `filter="url(#${fid})"`;   // cutouts get a hard drop shadow in the team's second colour
+      const shade = `filter="url(#${fid})"`;   // cutouts get a soft dark drop shadow
       let photo = '';
       if (src && c.photo) photo = `<image href="${esc(src)}" x="0" y="0" width="${PH_W}" height="${PH_H}" preserveAspectRatio="xMidYMin slice" ${gray}/>`;
       else if (src) { const f = frames.get(src) || (c.espn ? { x: -170, y: 80, w: 1040, h: 755 } : { x: -150, y: 15, w: 1000, h: 1000 });
@@ -278,7 +288,9 @@ window.PP = (() => {
       const tags = shown.map((t, i) => `<span class="jt" style="--t1:${esc(t.c[0])};--t2:${esc(t.c[1])};--r:${i % 2 ? 2.5 : -2.5}deg"><b>${esc(t.t)}</b>${esc(t.y)}</span>`).join('')
         + (st.length > 9 ? `<span class="jt more" style="--r:2deg"><b>+${st.length - 8}</b>more</span>` : '');
       const star = Array.from({ length: 28 }, (_, i) => { const a = Math.PI * i / 14, r = i % 2 ? 84 : 100; return `${(100 + r * Math.cos(a)).toFixed(1)},${(100 + r * Math.sin(a)).toFixed(1)}`; }).join(' ');
-      el.card.className = 'pp-card jc' + (miss ? ' miss' : '') + (c.pinpoint ? ' pin' : '');
+      const rankHidden = !miss && c.rankShown === false;
+      rankState = rankHidden ? 'hidden' : 'shown';
+      el.card.className = 'pp-card jc' + (miss ? ' miss' : '') + (c.pinpoint ? ' pin' : '') + (rankHidden ? ' rank-hidden' : '');
       el.card.style.setProperty('--pc', c.whoColor || '#ffd84a');
       el.card.style.setProperty('--t1', miss ? '#5d646b' : tc[0]);
       el.card.style.setProperty('--t2', miss ? '#9aa1a8' : tc[1]);
@@ -290,29 +302,45 @@ window.PP = (() => {
               <filter id="jcGray"><feColorMatrix type="saturate" values="0"/></filter>
               <filter id="${fid}" x="-20%" y="-20%" width="140%" height="140%">
                 <feColorMatrix in="SourceGraphic" type="saturate" values="${miss ? 0 : 1}" result="g"/>
-                <feOffset in="SourceAlpha" dx="16" dy="10" result="o"/><feFlood flood-color="${esc(miss ? '#2a2f34' : tc[1])}"/><feComposite in2="o" operator="in" result="pop"/>
-                <feGaussianBlur in="SourceAlpha" stdDeviation="7" result="bl"/><feOffset in="bl" dx="-4" dy="8" result="blo"/><feFlood flood-color="#000" flood-opacity=".5"/><feComposite in2="blo" operator="in" result="soft"/>
-                <feMerge><feMergeNode in="pop"/><feMergeNode in="soft"/><feMergeNode in="g"/></feMerge>
+                <feGaussianBlur in="SourceAlpha" stdDeviation="16" result="b1"/><feOffset in="b1" dx="10" dy="14" result="o1"/>
+                <feFlood flood-color="#05080c" flood-opacity=".62"/><feComposite in2="o1" operator="in" result="soft"/>
+                <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="b2"/><feOffset in="b2" dx="4" dy="5" result="o2"/>
+                <feFlood flood-color="#05080c" flood-opacity=".35"/><feComposite in2="o2" operator="in" result="near"/>
+                <feMerge><feMergeNode in="soft"/><feMergeNode in="near"/><feMergeNode in="g"/></feMerge>
               </filter>
             </defs>
             ${photo}
           </svg>
           ${tags ? `<div class="jc-teams${st.length > 6 ? ' many2' : st.length > 3 ? ' many' : ''}">${tags}</div>` : ''}
           ${miss ? `<svg class="jc-x" viewBox="0 0 100 100"><path d="M20 20 L80 80 M80 20 L20 80" stroke="#0a0a0a" stroke-width="20" stroke-linecap="round"/><path d="M20 20 L80 80 M80 20 L20 80" stroke="#e3262f" stroke-width="12" stroke-linecap="round"/></svg>` : ''}
-          ${c.pinpoint ? `<div class="jc-pin"><span>Best possible answer</span>PINPOINT!</div>` : ''}
+          ${c.pinpoint ? `<div class="jc-pin rv"><span>Best possible answer</span>PINPOINT!</div>` : ''}
         </div>
-        ${c.who ? `<div class="jc-who">${esc(c.who)} <b>${miss ? 'STRIKE' : '+' + esc(c.pts)}</b></div>` : ''}
-        ${c.rare && !c.pinpoint ? `<div class="jc-rare">Rare find!</div>` : ''}
+        ${c.who ? `<div class="jc-who">${esc(c.who)}${miss ? ' <b>STRIKE</b>' : ` <b class="rv">+${esc(c.pts)}</b>`}</div>` : ''}
+        ${c.rare && !c.pinpoint ? `<div class="jc-rare rv">Rare find!</div>` : ''}
         <div class="jc-info">
           <div class="jc-namebox"><div class="jc-name" data-fit="124" data-min="48">${esc(c.name)}</div></div>
           <div class="jc-row">
-            <div class="jc-rank"><svg viewBox="0 0 200 200"><polygon points="${star}"/></svg><div><i>${esc(rankTop)}</i><b data-fit="64" data-min="30" data-w="110">${esc(rankBig)}</b></div></div>
-            <div class="jc-stat"><div class="jc-statbox"><b class="jc-val" data-fit="${miss && !hasVal ? 64 : 120}" data-min="36">${esc(statBig)}</b></div>
+            <div class="jc-stat"><div class="jc-statbox"><b class="jc-val" data-fit="${miss && !hasVal ? 64 : 124}" data-min="36">${esc(statBig)}</b></div>
               <div class="jc-lbl">${esc(statLbl)}</div></div>
+            <div class="jc-rank${rankHidden ? ' hide' : ''}"><svg viewBox="0 0 200 200"><polygon points="${star}"/></svg><div><i>${esc(rankTop)}</i><b data-fit="70" data-min="30" data-w="120">${esc(rankBig)}</b></div></div>
           </div>
         </div>`;
       fitText(el.card);
-      if (!sameId) { el.card.classList.remove('enter'); void el.card.offsetWidth; el.card.classList.add('enter'); }
+      if (!sameId) { el.card.classList.remove('enter'); void el.card.offsetWidth; el.card.classList.add('enter'); sfx('card'); }
+    }
+    // star-wipe the rank in when the producer reveals it (no full re-render, so the card doesn't re-animate)
+    function syncRank(c) {
+      if (!c || c.kind === 'miss') return;
+      const want = c.rankShown === false ? 'hidden' : 'shown';
+      if (want === rankState) return;
+      rankState = want;
+      const r = el.card.querySelector('.jc-rank'); if (!r) return;
+      if (want === 'shown') {
+        el.card.classList.remove('rank-hidden');
+        r.classList.remove('hide'); r.classList.remove('wipe'); void r.offsetWidth; r.classList.add('wipe');
+        el.card.classList.add('revealed');
+        sfx('reveal');
+      } else { r.classList.add('hide'); r.classList.remove('wipe'); el.card.classList.add('rank-hidden'); el.card.classList.remove('revealed'); }
     }
     // warm a whole list of photos (display does this as soon as a list is chosen)
     async function preloadAll(items) {
@@ -377,7 +405,8 @@ window.PP = (() => {
 
     function render(S) {
       if (!S) return;
-      latest = S;
+      latest = S; sfxCfg = S.sfx || null;
+      if (opts.sound && sfxCfg) ['card', 'reveal'].forEach(k => { const n = sfxCfg[k]; if (n && !audio[n]) { const au = new Audio('sfx/' + n + '.m4a'); au.preload = 'auto'; audio[n] = au; } });
       if (S.pre && S.pre.length) { const k = S.pre.map(x => x.img).join('|'); if (k !== lastPre) { lastPre = k; preloadAll(S.pre); } }
       applyLayout(S);
       renderCard(S);
