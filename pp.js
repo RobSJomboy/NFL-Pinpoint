@@ -463,7 +463,7 @@ window.PP = (() => {
       const c = S.card;
       const on = !!(S.show && S.show.card && c && !(S.show.board && S.board));
       if (!c) { el.cardwrap.classList.toggle('on', false); return; }
-      const key = c.id + '|' + (c.img || '') + '|' + (c.photo ? 1 : 0) + '|' + (S.cardLabel || '') + '|' + (S.sub || '');
+      const key = c.id + '|' + (c.img || '') + '|' + (c.photo ? 1 : 0) + '|' + (S.cardLabel || '') + '|' + (S.sub || '') + '|' + JSON.stringify(c.pf || 0);
       const lk = c.img + (c.photo ? '' : '#c');
       if (key !== lastCardKey && c.img && !loaded.has(lk)) {
         el.cardwrap.classList.remove('on');           // hold the new card until its photo is ready
@@ -480,10 +480,13 @@ window.PP = (() => {
       const gray = miss ? 'filter="url(#jcGray)"' : '';
       const fid = 'jcSh' + String(c.id).replace(/\W/g, '');
       const shade = `filter="url(#${fid})"`;   // cutouts get a soft dark drop shadow
+      // this player's own photo position / zoom (set by the producer, saved with the photo)
+      const pf = c.pf || null;
+      const pft = pf ? `transform="translate(${pf.x || 0} ${pf.y || 0}) translate(${PH_W / 2} ${PH_H / 2}) scale(${(pf.s || 100) / 100}) translate(${-PH_W / 2} ${-PH_H / 2})"` : '';
       let photo = '';
-      if (src && c.photo) photo = `<image href="${esc(src)}" x="0" y="0" width="${PH_W}" height="${PH_H}" preserveAspectRatio="xMidYMin slice" ${gray}/>`;
+      if (src && c.photo) photo = `<image href="${esc(src)}" x="0" y="0" width="${PH_W}" height="${PH_H}" preserveAspectRatio="xMidYMin slice" ${pft} ${gray}/>`;
       else if (src) { const f = frames.get(src) || (c.espn ? { x: -160, y: 90, w: 1060, h: 770 } : { x: -140, y: 20, w: 1010, h: 1010 });
-        photo = `<image href="${esc(src)}" ${frames.has(src) && !/^data:/.test(src) ? 'crossorigin="anonymous"' : ''} x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" preserveAspectRatio="xMidYMin meet" ${shade}/>`; }
+        photo = `<image href="${esc(src)}" ${frames.has(src) && !/^data:/.test(src) ? 'crossorigin="anonymous"' : ''} x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" preserveAspectRatio="xMidYMin meet" ${pft} ${shade}/>`; }
       else photo = `<g opacity=".35" fill="#0a0a0a"><circle cx="${PH_W / 2}" cy="270" r="118"/><path d="M110 660 Q120 440 ${PH_W / 2} 425 Q${PH_W - 120} 440 ${PH_W - 110} 660Z"/></g>`;
       const tc = c.tc || ['#2b4a63', '#fbcc7a'];
       const hasVal = c.val !== '' && c.val != null;

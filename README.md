@@ -72,6 +72,8 @@ them on this page* lets you check against the preview.
 - **Check photos / step through cards** opens Photo check: every player on the list as a card. ← → to move, *Next source*
   to cycle the real photos available (NFL.com, ESPN, Wikipedia), paste a link, choose or drop a file, switch the fit
   (cutout / fill the frame), *No photo*, or *Back to automatic*. Red outline = no photo found, green = chosen by you.
+- **Move / zoom a player's photo:** in Photo check drag the photo on the card (scroll to zoom) or use the X / Y / Zoom
+  sliders; on the live card use *Card photo → Drag this player's photo*. The position is saved with that player's photo.
 - Every photo found or chosen is saved to this browser's **photo library** and reused next time. Export / import it
   from the Data section to move it to another computer.
 - A card never airs before its photo loads. Real photos only — nothing is ever generated. No photo = a plain silhouette.

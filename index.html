@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://use.typekit.net/lxl2pkq.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="pp.css?v=15">
+<link rel="stylesheet" href="pp.css?v=16">
 <style>
   :root { --navy:#0d1f2d; --navy2:#13293b; --navy3:#1b3850; --line:#24425c; --gold:#fbcc7a; --ink:#eef3f8; --dim:#9fb2c4; --red:#ff5a5f; --green:#3ddc84; }
   * { box-sizing:border-box; }
@@ -280,6 +280,11 @@
       <summary>Card photo</summary>
       <div class="row" style="margin-top:8px"><input type="text" id="imgOverride" placeholder="Paste an image URL to replace the current card photo"><button id="imgApply">Apply</button></div>
       <div class="hint">Replaces the photo on the card that's up now and saves it for next time. You can also drop an image file onto the preview. Real photos only — NFL.com, ESPN, Wikipedia or yours.</div>
+      <label class="inl" style="margin:8px 0"><input type="checkbox" id="fxMode"> Drag this player's photo on the preview (scroll to zoom) — saved for him</label>
+      <div class="sl"><span>X</span><input type="range" id="cfX" min="-500" max="500"><input type="number" id="cfXn"></div>
+      <div class="sl"><span>Y</span><input type="range" id="cfY" min="-600" max="600"><input type="number" id="cfYn"></div>
+      <div class="sl"><span>Zoom %</span><input type="range" id="cfS" min="40" max="300"><input type="number" id="cfSn"></div>
+      <div class="row"><button class="sm" id="cfReset">Reset photo position</button></div>
     </details>
     <details open>
       <summary>Layout — sizes &amp; positions</summary>
@@ -324,13 +329,18 @@
       <div class="row"><input type="text" id="phUrl" placeholder="Paste an image link"><button id="phUrlGo">Use</button></div>
       <div class="row"><label style="flex:1;text-align:center;border:1px dashed var(--line);border-radius:8px;padding:7px;cursor:pointer">Choose a file… (or drop one on the card)<input type="file" id="phFile" accept="image/*" hidden></label></div>
       <div class="row"><button id="phNone" style="flex:1">No photo</button><button id="phReset" style="flex:1">Back to automatic</button></div>
+      <div class="lbl">This photo's position — or drag it on the card, scroll to zoom</div>
+      <div class="sl"><span>X</span><input type="range" id="fxX" min="-500" max="500"><input type="number" id="fxXn"></div>
+      <div class="sl"><span>Y</span><input type="range" id="fxY" min="-600" max="600"><input type="number" id="fxYn"></div>
+      <div class="sl"><span>Zoom %</span><input type="range" id="fxS" min="40" max="300"><input type="number" id="fxSn"></div>
+      <div class="row"><button id="fxReset" class="sm">Reset this photo's position</button></div>
     </div>
   </div>
 </dialog>
 
-<script src="pp.js?v=15"></script>
-<script src="fpdata.js?v=15"></script>
-<script src="players.js?v=15"></script>
+<script src="pp.js?v=16"></script>
+<script src="fpdata.js?v=16"></script>
+<script src="players.js?v=16"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -502,7 +512,16 @@
     if (nv && nv.team) { const c = PP.teamColors(nv.team); return { teams: [{ t: nv.team, y: nv.y0 === nv.y1 ? String(nv.y0) : nv.y0 + '\u2013' + String(nv.y1).slice(-2), c }], tc: c }; }
     return { teams: [], tc: null };
   }
-  const applyRec = (card, rec) => Object.assign(card, { img: rec.img || '', photo: !!rec.photo, espn: !!rec.espn });
+  const applyRec = (card, rec) => Object.assign(card, { img: rec.img || '', photo: !!rec.photo, espn: !!rec.espn, pf: rec.fx || null });
+  // move / zoom one player's photo inside the card; saved with that photo in the library
+  function setPhotoFx(name, fx) {
+    const k = PP.norm(name), rec = PHOTOS[k]; if (!rec || !rec.img) return false;
+    rec.fx = fx; libSave();
+    if (G.list) G.list.rows.forEach(r => { if (r.k === k) r.ph = rec; });
+    if (G.card && PP.norm(G.card.name) === k) G.card = Object.assign({}, G.card, { pf: fx });
+    publish(); return true;
+  }
+  const fxOf = name => Object.assign({ x: 0, y: 0, s: 100 }, (PHOTOS[PP.norm(name)] || {}).fx || {});
   // Fill a card's photo. Known photo (library / list preload) → straight to air. Unknown → hold the card (scores
   // still update) up to 3.5s while it is found, so it never airs without its photo.
   function attachImg(card, o) {
@@ -575,7 +594,8 @@
     phN++;
     phStage.render({ app: 'npp', seq: phN, show: { card: true }, players: [], title: L.title, sub: L.sub, size: L.size, cardLabel: L.label,
       layout: { cx: 0, cy: 0, cs: 100, sx: 4000, kx: 6000, ce: G.layout.ce || {} },
-      card: Object.assign({ id: 'chk' + phN, kind: 'hit', name: r.name, val: r.val, rank: r.rank, dr: r.dr, img: rec.img || '', photo: !!rec.photo, espn: !!rec.espn, pinpoint: r.rank === L.maxRank }, teamsFor(r)) });
+      card: Object.assign({ id: 'chk' + phN, kind: 'hit', name: r.name, val: r.val, rank: r.rank, dr: r.dr, img: rec.img || '', photo: !!rec.photo, espn: !!rec.espn, pf: rec.fx || null, pinpoint: r.rank === L.maxRank }, teamsFor(r)) });
+    syncPhFx();
     $('phInfo').innerHTML = `<b>#${PP.esc(r.dr)} ${PP.esc(r.name)}</b> · ${phIdx + 1} of ${L.rows.length}<br>Photo: <b>${!r.ph ? 'still looking…' : rec.img ? PP.esc(rec.src || srcName(rec.img)) + (rec.by === 'manual' ? ' (yours)' : '') : rec.by === 'none' ? 'none (you chose the silhouette)' : 'none found'}</b>`;
     $('phFit').textContent = rec.photo ? 'Fit: fill the frame' : 'Fit: cutout';
     renderPhGrid();
@@ -627,6 +647,22 @@
   phBox.addEventListener('drop', async e => { e.preventDefault(); phBox.classList.remove('drop'); const f = e.dataTransfer.files[0]; if (!f || !f.type.startsWith('image/')) return; const rec = await fileToRec(f); if (rec) setRowPhoto(G.list.rows[phIdx], rec); });
   $('phFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; const rec = await fileToRec(f); if (rec) setRowPhoto(G.list.rows[phIdx], rec); e.target.value = ''; };
   $('phOpen').onclick = openPhotoCheck;
+  // photo position in Photo check
+  function phRow() { return G.list && G.list.rows[phIdx]; }
+  function syncPhFx() { const r = phRow(); if (!r) return; const f = fxOf(r.name); [['fxX', 'x'], ['fxY', 'y'], ['fxS', 's']].forEach(([id, k]) => { $(id).value = f[k]; $(id + 'n').value = f[k]; }); }
+  function phSetFx(f) { const r = phRow(); if (!r) return; if (!setPhotoFx(r.name, f)) return flash('Give him a photo first.', 'warn'); showPh(phIdx); }
+  [['fxX', 'x'], ['fxY', 'y'], ['fxS', 's']].forEach(([id, k]) => {
+    $(id).oninput = () => { const r = phRow(); const f = fxOf(r.name); f[k] = +$(id).value; phSetFx(f); };
+    $(id + 'n').onchange = () => { const r = phRow(); const f = fxOf(r.name); f[k] = +$(id + 'n').value || (k === 's' ? 100 : 0); phSetFx(f); };
+  });
+  $('fxReset').onclick = () => phSetFx({ x: 0, y: 0, s: 100 });
+  let phDrag = null;
+  phBox.addEventListener('pointerdown', e => { const r = phRow(); if (!r || !(PHOTOS[r.k] || {}).img) return; e.preventDefault(); try { phBox.setPointerCapture(e.pointerId); } catch {} phDrag = { x: e.clientX, y: e.clientY, f: fxOf(r.name) }; phBox.style.cursor = 'grabbing'; });
+  phBox.addEventListener('pointermove', e => { if (!phDrag) return; const k = 2;   // the card preview is drawn at half size
+    phSetFx({ x: Math.round(phDrag.f.x + (e.clientX - phDrag.x) * k), y: Math.round(phDrag.f.y + (e.clientY - phDrag.y) * k), s: phDrag.f.s }); });
+  const phEnd = () => { phDrag = null; phBox.style.cursor = ''; };
+  phBox.addEventListener('pointerup', phEnd); phBox.addEventListener('pointercancel', phEnd);
+  phBox.addEventListener('wheel', e => { const r = phRow(); if (!r || !(PHOTOS[r.k] || {}).img) return; e.preventDefault(); const f = fxOf(r.name); f.s = Math.max(40, Math.min(300, f.s + (e.deltaY < 0 ? 5 : -5))); phSetFx(f); }, { passive: false });
   // ── list loading ────────────────────────────────────────────────────────
   function setList(L, keepGame) {
     L.rows.forEach(r => { r.k = PP.norm(r.name); r.kh = PP.normHy(r.name); r.found = null; r.rv = false; });
@@ -932,7 +968,7 @@
     renderLive(); renderButtons(); publish();
   }
   function afterAction() {
-    $('gIn').value = ''; hideSugg();
+    $('gIn').value = ''; hideSugg(); if (typeof syncCardFx === 'function') syncCardFx();
     renderAll(); publish();
   }
   function revealRest() {
@@ -1117,20 +1153,25 @@
   const pvBoxEl = document.querySelector('.previewbox');
   const PIECE_SEL = [['.jc-namebox', 'name'], ['.jc-statbox', 'val'], ['.jc-lbl', 'lbl'], ['.jc-rank', 'rank'], ['.jc-teams', 'teams'], ['.jc-who', 'who'], ['.jc-rare', 'rare'], ['.jc-pin', 'pin'], ['.jc-photo', 'photo']];
   const cardPieceAt = t => { if (!t.closest('.pp-cardwrap.on .pp-card')) return null; for (const [sel, k] of PIECE_SEL) if (t.closest(sel)) return k; return null; };
-  const pieceAt = t => (piecesMode && cardPieceAt(t) ? 'p:' + cardPieceAt(t) : null) || (t.closest('.pp-cardwrap.on .pp-card') ? 'c' : t.closest('.pp-strikes.on') ? 'k' : (t.closest('.pp-score.on') || t.closest('.pp-title.on')) ? 's' : t.closest('.pp-board.on') ? 'b' : null);
+  const pieceAt = t => (fxMode && G.card && t.closest('.pp-cardwrap.on .jc-photo') ? 'f' : null) || (piecesMode && cardPieceAt(t) ? 'p:' + cardPieceAt(t) : null) || (t.closest('.pp-cardwrap.on .pp-card') ? 'c' : t.closest('.pp-strikes.on') ? 'k' : (t.closest('.pp-score.on') || t.closest('.pp-title.on')) ? 's' : t.closest('.pp-board.on') ? 'b' : null);
   const pvScale = () => pvHost.getBoundingClientRect().width / 1920;
   const ce = k => { G.layout.ce = G.layout.ce || {}; return (G.layout.ce[k] = G.layout.ce[k] || { x: 0, y: 0, s: 100 }); };
   let drag = null;
   pvBoxEl.addEventListener('pointerdown', e => {
     const k = pieceAt(e.target); if (!k) return;
-    e.preventDefault(); pvBoxEl.setPointerCapture(e.pointerId);
-    if (k.startsWith('p:')) { const v = ce(k.slice(2)); drag = { k, x: e.clientX, y: e.clientY, ox: v.x, oy: v.y }; selPiece(k.slice(2)); }
+    e.preventDefault(); try { pvBoxEl.setPointerCapture(e.pointerId); } catch {}
+    if (k === 'f') { const f = fxOf(G.card.name); drag = { k, x: e.clientX, y: e.clientY, ox: f.x, oy: f.y, os: f.s }; }
+    else if (k.startsWith('p:')) { const v = ce(k.slice(2)); drag = { k, x: e.clientX, y: e.clientY, ox: v.x, oy: v.y }; selPiece(k.slice(2)); }
     else drag = { k, x: e.clientX, y: e.clientY, ox: G.layout[k + 'x'], oy: G.layout[k + 'y'] };
     pvBoxEl.classList.add('dragging');
   });
   pvBoxEl.addEventListener('pointermove', e => {
     if (!drag) { const k = pieceAt(e.target); pvBoxEl.style.cursor = k ? 'grab' : ''; return; }
     const sc = pvScale();
+    if (drag.k === 'f') {
+      const ff = sc * G.layout.cs / 100 * ((G.layout.ce && G.layout.ce.photo && G.layout.ce.photo.s) || 100) / 100;
+      setPhotoFx(G.card.name, { x: Math.round(drag.ox + (e.clientX - drag.x) / ff), y: Math.round(drag.oy + (e.clientY - drag.y) / ff), s: drag.os }); syncCardFx(); return;
+    }
     if (drag.k.startsWith('p:')) {
       const f = sc * G.layout.cs / 100, v = ce(drag.k.slice(2));        // card pieces live inside the scaled card
       v.x = Math.round(drag.ox + (e.clientX - drag.x) / f); v.y = Math.round(drag.oy + (e.clientY - drag.y) / f);
@@ -1145,10 +1186,22 @@
   pvBoxEl.addEventListener('wheel', e => {
     const k = pieceAt(e.target); if (!k) return;
     e.preventDefault();
+    if (k === 'f') { const f = fxOf(G.card.name); f.s = Math.max(40, Math.min(300, f.s + (e.deltaY < 0 ? 5 : -5))); setPhotoFx(G.card.name, f); syncCardFx(); return; }
     if (k.startsWith('p:')) { const v = ce(k.slice(2)); v.s = Math.max(30, Math.min(250, v.s + (e.deltaY < 0 ? 4 : -4))); selPiece(k.slice(2)); saveLay(); syncPieceUI(); return; }
     const key = k + 's';
     setLay(key, Math.max(30, Math.min(140, G.layout[key] + (e.deltaY < 0 ? 2 : -2)))); saveLay();
   }, { passive: false });
+
+  // this card's photo position
+  let fxMode = false;
+  $('fxMode').onchange = () => { fxMode = $('fxMode').checked; pvBoxEl.classList.toggle('pieces', fxMode || piecesMode); };
+  function syncCardFx() { const f = G.card ? fxOf(G.card.name) : { x: 0, y: 0, s: 100 }; [['cfX', 'x'], ['cfY', 'y'], ['cfS', 's']].forEach(([id, k]) => { $(id).value = f[k]; $(id + 'n').value = f[k]; }); }
+  const cardFx = (k, v) => { if (!G.card) return flash('No card on screen.', 'warn'); const f = fxOf(G.card.name); f[k] = v; if (!setPhotoFx(G.card.name, f)) flash('This card has no photo to move.', 'warn'); syncCardFx(); };
+  [['cfX', 'x'], ['cfY', 'y'], ['cfS', 's']].forEach(([id, k]) => {
+    $(id).oninput = () => cardFx(k, +$(id).value);
+    $(id + 'n').onchange = () => cardFx(k, +$(id + 'n').value || (k === 's' ? 100 : 0));
+  });
+  $('cfReset').onclick = () => { if (G.card) { setPhotoFx(G.card.name, { x: 0, y: 0, s: 100 }); syncCardFx(); } };
 
   // "Inside the card" panel
   let piecesMode = false, curPiece = 'name';
@@ -1160,7 +1213,7 @@
     $(id).oninput = () => { ce(curPiece)[f] = +$(id).value; $(id + 'n').value = $(id).value; saveLay(); };
     $(id + 'n').onchange = () => { ce(curPiece)[f] = +$(id + 'n').value || (f === 's' ? 100 : 0); syncPieceUI(); saveLay(); };
   });
-  $('pcMode').onchange = () => { piecesMode = $('pcMode').checked; pvBoxEl.classList.toggle('pieces', piecesMode); };
+  $('pcMode').onchange = () => { piecesMode = $('pcMode').checked; pvBoxEl.classList.toggle('pieces', piecesMode || fxMode); };
   $('pcReset').onclick = () => { if (G.layout.ce) delete G.layout.ce[curPiece]; syncPieceUI(); saveLay(); };
   $('pcResetAll').onclick = () => { if (!confirm('Put every piece inside the card back where it started?')) return; G.layout.ce = {}; syncPieceUI(); saveLay(); };
   syncPieceUI();
