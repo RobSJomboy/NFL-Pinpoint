@@ -92,7 +92,9 @@
   .sl { display:grid; grid-template-columns:70px 1fr 64px; gap:8px; align-items:center; margin:6px 0; font:500 12px 'DM Mono'; color:var(--dim); }
   .sl input[type=range] { width:100%; }
   .sl input[type=number] { width:64px; padding:3px 5px; font:12px 'DM Mono'; }
-  .previewbox { touch-action:none; } .previewbox.pieces { outline:2px dashed var(--gold); outline-offset:3px; } .previewbox.dragging, .previewbox.dragging * { cursor:grabbing !important; }
+  .previewbox { touch-action:none; width:var(--pvw, 100%); margin:0 auto; }
+  .pvbar { display:flex; align-items:center; gap:6px; }
+  body.pv-hidden .previewbox { display:none; } .previewbox.pieces { outline:2px dashed var(--gold); outline-offset:3px; } .previewbox.dragging, .previewbox.dragging * { cursor:grabbing !important; }
   /* right */
   .meta { font:500 12px 'DM Mono'; color:var(--dim); margin-bottom:8px; }
   .meta b { color:var(--ink); }
@@ -270,6 +272,10 @@
       <button id="bUndo">Undo<span class="kbd">U</span></button>
       <button id="bReveal">Reveal rest</button>
     </div>
+    <div class="pvbar"><span class="lbl" style="margin:0">Preview</span>
+      <button class="sm" data-pv="40">S</button><button class="sm" data-pv="65">M</button><button class="sm" data-pv="100">L</button>
+      <input type="range" id="pvSize" min="25" max="100" step="5" style="flex:1;max-width:220px"><span id="pvSizeV" class="lbl" style="margin:0;width:40px"></span>
+      <button class="sm" id="pvHide">Hide</button></div>
     <div class="previewbox"><div id="pvHost"></div></div>
     <div class="whoosh">
       <div class="wrow"><span class="lbl">Card in</span><div class="chips2" id="wCard"></div></div>
@@ -429,6 +435,14 @@
       send(Object.assign({ seq: Date.now() }, p));
     }, 120);
   }
+
+  // preview size: S / M / L or the slider; remembered per browser
+  function setPv(v) { v = Math.max(25, Math.min(100, +v || 100)); document.documentElement.style.setProperty('--pvw', v + '%'); $('pvSize').value = v; $('pvSizeV').textContent = v + '%'; LS.set('pvSize', v); setTimeout(() => window.dispatchEvent(new Event('resize')), 30); }
+  $('pvSize').oninput = () => setPv($('pvSize').value);
+  document.querySelectorAll('[data-pv]').forEach(b => b.onclick = () => setPv(b.dataset.pv));
+  $('pvHide').onclick = () => { const h = document.body.classList.toggle('pv-hidden'); $('pvHide').textContent = h ? 'Show' : 'Hide'; LS.set('pvHidden', h); setTimeout(() => window.dispatchEvent(new Event('resize')), 30); };
+  setPv(LS.get('pvSize', 100));
+  if (LS.get('pvHidden', false)) { document.body.classList.add('pv-hidden'); $('pvHide').textContent = 'Show'; }
 
   // ── preview ─────────────────────────────────────────────────────────────
   const pvHost = $('pvHost');
