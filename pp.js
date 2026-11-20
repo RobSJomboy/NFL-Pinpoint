@@ -288,6 +288,9 @@ window.PP = (() => {
     ['boardHead', 'Board title', 'anton', 'Full board'],
     ['board', 'Board names', 'archivo', 'Full board'],
   ];
+  // pieces inside the card the producer can move / size: [key, label]
+  const CARD_PIECES = [['name', 'Player name'], ['val', 'Stat number'], ['lbl', 'Stat label'], ['rank', 'Rank badge'], ['teams', 'Team & years tags'],
+    ['who', 'Contestant tag'], ['rare', 'Rare find sticker'], ['pin', 'PINPOINT banner'], ['photo', 'Player photo']];
   const fontLinks = new Set();
   function ensureFont(key) {           // Google fonts load only when picked
     const d = FONTS[key]; if (!d || !d[5] || fontLinks.has(d[5])) return;
@@ -365,6 +368,10 @@ window.PP = (() => {
     // All 25 whooshes are fetched + decoded up front into Web Audio buffers, so a whoosh starts on the same frame as
     // its card (HTML <audio> has to fetch/decode on first play, which is what put them out of sync).
     const born = Date.now(); let sfxCfg = null; const audio = {}, buffers = {}; let actx = null;
+    // where each whoosh hits its loudest point (s), measured from the files. A whoosh is started partway in so its
+    // peak lands on the visual beat: the card settling (~0.22s after it shows) or the star opening (~0.3s).
+    const SFX_PEAK = { 'whoosh-01': 0.63, 'whoosh-02': 0.66, 'whoosh-03': 0.49, 'whoosh-04': 0.69, 'whoosh-05': 0.6, 'whoosh-06': 1.34, 'whoosh-07': 0.35, 'whoosh-08': 0.23, 'whoosh-09': 0.26, 'whoosh-10': 0.27, 'whoosh-11': 0.2, 'whoosh-12': 0.26, 'whoosh-13': 0.14, 'whoosh-14': 0.17, 'whoosh-15': 0.21, 'whoosh-16': 0.16, 'whoosh-17': 0.14, 'whoosh-18': 0.09, 'whoosh-19': 0.11, 'whoosh-20': 0.49, 'whoosh-21': 0.55, 'whoosh-22': 0.29, 'whoosh-23': 0.23, 'whoosh-24': 0.51, 'whoosh-25': 0.44 };
+    const SFX_BEAT = { card: 0.22, reveal: 0.30 };
     const SFX_NAMES = Array.from({ length: 25 }, (_, i) => 'whoosh-' + String(i + 1).padStart(2, '0'));
     if (opts.sound) {
       try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
@@ -376,18 +383,28 @@ window.PP = (() => {
       wake(); ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, wake));
     }
     function sfx(kind) {
-      if (!opts.sound || !sfxCfg || !sfxCfg.on || Date.now() - born < 2500) return;
+      const soundOn = typeof opts.sound === 'function' ? opts.sound() : opts.sound;
+      if (!soundOn || !sfxCfg || (!sfxCfg.on && typeof opts.sound !== 'function') || Date.now() - born < 2500) return;
       const name = sfxCfg[kind]; if (!name) return;
       const vol = Math.max(0, Math.min(1, (sfxCfg.vol ?? 80) / 100));
-      try {
+      // skip the build-up so the peak hits on the beat; the producer's nudge (ms) moves it later (+) or earlier (-)
+      const nudge = (+sfxCfg.sync || 0) / 1000;
+      let skip = Math.max(0, (SFX_PEAK[name] ?? 0.2) - (SFX_BEAT[kind] ?? 0.25) - nudge);
+      const wait = Math.max(0, nudge - Math.max(0, (SFX_PEAK[name] ?? 0.2) - (SFX_BEAT[kind] ?? 0.25)));
+      const go = () => { try {
         if (actx && actx.state === 'running' && buffers[name]) {
           const src = actx.createBufferSource(), g = actx.createGain();
-          src.buffer = buffers[name]; g.gain.value = vol; src.connect(g).connect(actx.destination); src.start();
+          src.buffer = buffers[name]; g.gain.value = vol; src.connect(g).connect(actx.destination);
+          skip = Math.min(skip, buffers[name].duration - 0.05);
+          // tiny fade-in where we cut into the file, so the skip never clicks
+          g.gain.setValueAtTime(0, actx.currentTime); g.gain.linearRampToValueAtTime(vol, actx.currentTime + 0.015);
+          src.start(0, skip);
           return;
         }
         const a = audio[name] || (audio[name] = new Audio('sfx/' + name + '.m4a'));
-        a.volume = vol; a.currentTime = 0; a.play().catch(() => {});
-      } catch {}
+        a.volume = vol; a.currentTime = skip; a.play().catch(() => {});
+      } catch {} };
+      if (wait > 0) setTimeout(go, wait * 1000); else go();
     }
     let soundedCard = null;
     const loaded = new Set();   // src+mode that finished loading (ok or not)
@@ -606,6 +623,9 @@ window.PP = (() => {
     function applyLayout(S) {
       const L = Object.assign({}, LAY_DEFAULT, S.layout || {});
       el.cardwrap.style.transform = `translate(${L.cx}px,${L.cy}px) scale(${L.cs / 100})`;
+      const ce = L.ce || {};
+      CARD_PIECES.forEach(([k]) => { const v = ce[k] || {}; const cs = el.card.style;
+        cs.setProperty(`--${k}-x`, (v.x || 0) + 'px'); cs.setProperty(`--${k}-y`, (v.y || 0) + 'px'); cs.setProperty(`--${k}-s`, (v.s || 100) / 100); });
       el.sbwrap.style.transform = `translate(${L.sx}px,${L.sy}px) scale(${L.ss / 100})`;
       el.kwrap.style.transform = `translate(${L.kx}px,${L.ky}px) scale(${L.ks / 100})`;
       el.board.style.transform = `translate(${L.bx || 0}px,${L.by || 0}px) scale(${L.bs / 100 * (el.board.classList.contains('on') ? 1 : 0.96)})`;
@@ -682,5 +702,5 @@ window.PP = (() => {
   }
 
   return { W, H, IDX, STATS, STAT_GROUPS, statValue, norm, normHy, lastName, rankRows, cutTop, computeList, subtitleFor,
-    fmtVal, headshotUrl, esc, CARD_THEMES, PLAYER_COLORS, LAY_DEFAULT, createStage, fitStage, FONTS, FONT_SLOTS, fontDefaults, ensureFont, TEAM_COLORS, teamColors, teamLabel, teamStints, hubOf, publisher, fetchRoom, subscribe };
+    fmtVal, headshotUrl, esc, CARD_THEMES, PLAYER_COLORS, LAY_DEFAULT, createStage, fitStage, CARD_PIECES, FONTS, FONT_SLOTS, fontDefaults, ensureFont, TEAM_COLORS, teamColors, teamLabel, teamStints, hubOf, publisher, fetchRoom, subscribe };
 })();

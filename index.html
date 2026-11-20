@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://use.typekit.net/lxl2pkq.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="pp.css?v=14">
+<link rel="stylesheet" href="pp.css?v=15">
 <style>
   :root { --navy:#0d1f2d; --navy2:#13293b; --navy3:#1b3850; --line:#24425c; --gold:#fbcc7a; --ink:#eef3f8; --dim:#9fb2c4; --red:#ff5a5f; --green:#3ddc84; }
   * { box-sizing:border-box; }
@@ -92,7 +92,7 @@
   .sl { display:grid; grid-template-columns:70px 1fr 64px; gap:8px; align-items:center; margin:6px 0; font:500 12px 'DM Mono'; color:var(--dim); }
   .sl input[type=range] { width:100%; }
   .sl input[type=number] { width:64px; padding:3px 5px; font:12px 'DM Mono'; }
-  .previewbox { touch-action:none; } .previewbox.dragging, .previewbox.dragging * { cursor:grabbing !important; }
+  .previewbox { touch-action:none; } .previewbox.pieces { outline:2px dashed var(--gold); outline-offset:3px; } .previewbox.dragging, .previewbox.dragging * { cursor:grabbing !important; }
   /* right */
   .meta { font:500 12px 'DM Mono'; color:var(--dim); margin-bottom:8px; }
   .meta b { color:var(--ink); }
@@ -219,6 +219,9 @@
     <h2>Rank reveal &amp; sounds</h2>
     <div class="row"><label class="inl" style="flex:1">Reveal <select id="revealMode" style="flex:1"><option value="manual">Star wipe when I press R</option><option value="auto">Star wipe 1.8s after the card</option><option value="instant">Show with the card</option></select></label></div>
     <div class="row"><label class="inl"><input type="checkbox" id="sfxOn"> Whooshes on the OBS display</label><input type="range" id="sfxVol" min="0" max="100" style="flex:1"></div>
+    <div class="row"><label class="inl"><input type="checkbox" id="sfxLocal"> Also play them on this page (to check timing against the preview)</label></div>
+    <div class="sl"><span>Timing</span><input type="range" id="sfxSync" min="-400" max="400" step="10"><span id="sfxSyncV"></span></div>
+    <div class="hint" style="margin-top:0">Each whoosh is lined up so its loudest moment hits as the card lands / the star opens. If OBS still sounds off, slide left (earlier) or right (later).</div>
     <div class="row"><span class="lbl" style="margin:0;width:70px">Card in</span><select id="sfxCard" style="flex:1"><option value="whoosh-01">Whoosh 1</option><option value="whoosh-02">Whoosh 2</option><option value="whoosh-03">Whoosh 3</option><option value="whoosh-04">Whoosh 4</option><option value="whoosh-05">Whoosh 5</option><option value="whoosh-06">Whoosh 6</option><option value="whoosh-07">Whoosh 7</option><option value="whoosh-08">Whoosh 8</option><option value="whoosh-09">Whoosh 9</option><option value="whoosh-10">Whoosh 10</option><option value="whoosh-11">Whoosh 11</option><option value="whoosh-12">Whoosh 12</option><option value="whoosh-13">Whoosh 13</option><option value="whoosh-14">Whoosh 14</option><option value="whoosh-15">Whoosh 15</option><option value="whoosh-16">Whoosh 16</option><option value="whoosh-17">Whoosh 17</option><option value="whoosh-18">Whoosh 18</option><option value="whoosh-19">Whoosh 19</option><option value="whoosh-20">Whoosh 20</option><option value="whoosh-21">Whoosh 21</option><option value="whoosh-22">Whoosh 22</option><option value="whoosh-23">Whoosh 23</option><option value="whoosh-24">Whoosh 24</option><option value="whoosh-25">Whoosh 25</option></select><button class="sm" data-play="sfxCard">▶</button></div>
     <div class="row"><span class="lbl" style="margin:0;width:70px">Rank wipe</span><select id="sfxReveal" style="flex:1"><option value="whoosh-01">Whoosh 1</option><option value="whoosh-02">Whoosh 2</option><option value="whoosh-03">Whoosh 3</option><option value="whoosh-04">Whoosh 4</option><option value="whoosh-05">Whoosh 5</option><option value="whoosh-06">Whoosh 6</option><option value="whoosh-07">Whoosh 7</option><option value="whoosh-08">Whoosh 8</option><option value="whoosh-09">Whoosh 9</option><option value="whoosh-10">Whoosh 10</option><option value="whoosh-11">Whoosh 11</option><option value="whoosh-12">Whoosh 12</option><option value="whoosh-13">Whoosh 13</option><option value="whoosh-14">Whoosh 14</option><option value="whoosh-15">Whoosh 15</option><option value="whoosh-16">Whoosh 16</option><option value="whoosh-17">Whoosh 17</option><option value="whoosh-18">Whoosh 18</option><option value="whoosh-19">Whoosh 19</option><option value="whoosh-20">Whoosh 20</option><option value="whoosh-21">Whoosh 21</option><option value="whoosh-22">Whoosh 22</option><option value="whoosh-23">Whoosh 23</option><option value="whoosh-24">Whoosh 24</option><option value="whoosh-25">Whoosh 25</option></select><button class="sm" data-play="sfxReveal">▶</button></div>
 
@@ -286,6 +289,13 @@
       <div class="row"><span class="lbl" style="margin:0;width:90px">Scoreboard</span>
         <button class="sm" data-ssize="70">S</button><button class="sm" data-ssize="85">M</button><button class="sm" data-ssize="100">L</button><button class="sm" data-ssize="115">XL</button></div>
       <label class="inl" style="margin:6px 0"><input type="checkbox" id="linkK"> Strike boxes move with the scoreboard</label>
+      <div class="lbl" style="margin-top:12px">Inside the card</div>
+      <label class="inl" style="margin:4px 0 8px"><input type="checkbox" id="pcMode"> Move pieces inside the card (drag on the preview, scroll to size)</label>
+      <div class="row"><select id="pcPiece" style="flex:1"></select><button class="sm" id="pcReset">Reset piece</button></div>
+      <div class="sl"><span>X</span><input type="range" id="pcX" min="-500" max="500"><input type="number" id="pcXn"></div>
+      <div class="sl"><span>Y</span><input type="range" id="pcY" min="-800" max="800"><input type="number" id="pcYn"></div>
+      <div class="sl"><span>Size %</span><input type="range" id="pcS" min="30" max="250"><input type="number" id="pcSn"></div>
+      <div class="row"><button class="sm" id="pcResetAll">Reset all card pieces</button></div>
       <div id="layoutSl"></div>
       <button class="sm" id="layReset">Reset layout</button>
     </details>
@@ -318,9 +328,9 @@
   </div>
 </dialog>
 
-<script src="pp.js?v=14"></script>
-<script src="fpdata.js?v=14"></script>
-<script src="players.js?v=14"></script>
+<script src="pp.js?v=15"></script>
+<script src="fpdata.js?v=15"></script>
+<script src="players.js?v=15"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -412,7 +422,7 @@
 
   // ── preview ─────────────────────────────────────────────────────────────
   const pvHost = $('pvHost');
-  const pv = PP.createStage(pvHost);
+  const pv = PP.createStage(pvHost, { sound: () => !!(G.sfx && G.sfx.local) });
   PP.fitStage(pvHost);
 
   // ── helpers ─────────────────────────────────────────────────────────────
@@ -564,7 +574,7 @@
     const rec = r.ph || { img: '' };
     phN++;
     phStage.render({ app: 'npp', seq: phN, show: { card: true }, players: [], title: L.title, sub: L.sub, size: L.size, cardLabel: L.label,
-      layout: { cx: 0, cy: 0, cs: 100, sx: 4000, kx: 6000 },
+      layout: { cx: 0, cy: 0, cs: 100, sx: 4000, kx: 6000, ce: G.layout.ce || {} },
       card: Object.assign({ id: 'chk' + phN, kind: 'hit', name: r.name, val: r.val, rank: r.rank, dr: r.dr, img: rec.img || '', photo: !!rec.photo, espn: !!rec.espn, pinpoint: r.rank === L.maxRank }, teamsFor(r)) });
     $('phInfo').innerHTML = `<b>#${PP.esc(r.dr)} ${PP.esc(r.name)}</b> · ${phIdx + 1} of ${L.rows.length}<br>Photo: <b>${!r.ph ? 'still looking…' : rec.img ? PP.esc(rec.src || srcName(rec.img)) + (rec.by === 'manual' ? ' (yours)' : '') : rec.by === 'none' ? 'none (you chose the silhouette)' : 'none found'}</b>`;
     $('phFit').textContent = rec.photo ? 'Fit: fill the frame' : 'Fit: cutout';
@@ -977,6 +987,10 @@
   ['sfxOn', 'sfxVol', 'sfxCard', 'sfxReveal'].forEach(id => $(id).addEventListener('change', saveSfx));
   document.querySelectorAll('[data-play]').forEach(b => b.onclick = () => { const a = new Audio('sfx/' + $(b.dataset.play).value + '.m4a'); a.volume = +$('sfxVol').value / 100; a.play().catch(() => {}); });
   $('bRank').onclick = revealRank;
+  $('sfxLocal').checked = !!G.sfx.local; $('sfxSync').value = G.sfx.sync || 0; $('sfxSyncV').textContent = (G.sfx.sync || 0) + ' ms';
+  $('sfxLocal').onchange = () => { G.sfx.local = $('sfxLocal').checked; LS.set('sfx', G.sfx); };
+  $('sfxSync').oninput = () => { G.sfx.sync = +$('sfxSync').value; $('sfxSyncV').textContent = G.sfx.sync + ' ms'; };
+  $('sfxSync').onchange = () => { LS.set('sfx', G.sfx); publish(); };
   // fonts: one dropdown per on-screen text element
   function renderFontsEd() {
     const groups = {};
@@ -1090,7 +1104,7 @@
     $('layoutSl').querySelectorAll('[data-n]').forEach(i => { if (document.activeElement !== i) i.value = G.layout[i.dataset.n]; });
   }
   $('linkK').onchange = () => { linkK = $('linkK').checked; LS.set('linkK', linkK); };
-  $('layReset').onclick = () => { G.layout = Object.assign({}, PP.LAY_DEFAULT); saveLay(); };
+  $('layReset').onclick = () => { const keep = G.layout.ce; G.layout = Object.assign({}, PP.LAY_DEFAULT, { ce: keep }); saveLay(); };
   document.querySelectorAll('[data-csize]').forEach(b => b.onclick = () => { setLay('cs', +b.dataset.csize); saveLay(); });
   document.querySelectorAll('[data-ssize]').forEach(b => b.onclick = () => {
     const s = +b.dataset.ssize, f = s / G.layout.ss;
@@ -1098,23 +1112,32 @@
     G.layout.kx = Math.round(G.layout.sx + (G.layout.kx - G.layout.sx) * f); G.layout.ky = Math.round(G.layout.sy + (G.layout.ky - G.layout.sy) * f);
     G.layout.ss = s; G.layout.ks = Math.round(G.layout.ks * f); saveLay(); });
 
-  // drag on the preview to move things; scroll wheel over a piece to resize it
+  // drag on the preview to move things; scroll wheel over a piece to resize it.
+  // With "Move pieces inside the card" on, dragging on the card moves the piece under the pointer instead of the card.
   const pvBoxEl = document.querySelector('.previewbox');
-  const pieceAt = t => t.closest('.pp-cardwrap.on .pp-card') ? 'c' : t.closest('.pp-strikes.on') ? 'k' : (t.closest('.pp-score.on') || t.closest('.pp-title.on')) ? 's' : t.closest('.pp-board.on') ? 'b' : null;
+  const PIECE_SEL = [['.jc-namebox', 'name'], ['.jc-statbox', 'val'], ['.jc-lbl', 'lbl'], ['.jc-rank', 'rank'], ['.jc-teams', 'teams'], ['.jc-who', 'who'], ['.jc-rare', 'rare'], ['.jc-pin', 'pin'], ['.jc-photo', 'photo']];
+  const cardPieceAt = t => { if (!t.closest('.pp-cardwrap.on .pp-card')) return null; for (const [sel, k] of PIECE_SEL) if (t.closest(sel)) return k; return null; };
+  const pieceAt = t => (piecesMode && cardPieceAt(t) ? 'p:' + cardPieceAt(t) : null) || (t.closest('.pp-cardwrap.on .pp-card') ? 'c' : t.closest('.pp-strikes.on') ? 'k' : (t.closest('.pp-score.on') || t.closest('.pp-title.on')) ? 's' : t.closest('.pp-board.on') ? 'b' : null);
   const pvScale = () => pvHost.getBoundingClientRect().width / 1920;
+  const ce = k => { G.layout.ce = G.layout.ce || {}; return (G.layout.ce[k] = G.layout.ce[k] || { x: 0, y: 0, s: 100 }); };
   let drag = null;
   pvBoxEl.addEventListener('pointerdown', e => {
     const k = pieceAt(e.target); if (!k) return;
     e.preventDefault(); pvBoxEl.setPointerCapture(e.pointerId);
-    drag = { k, x: e.clientX, y: e.clientY, ox: G.layout[k + 'x'], oy: G.layout[k + 'y'] };
+    if (k.startsWith('p:')) { const v = ce(k.slice(2)); drag = { k, x: e.clientX, y: e.clientY, ox: v.x, oy: v.y }; selPiece(k.slice(2)); }
+    else drag = { k, x: e.clientX, y: e.clientY, ox: G.layout[k + 'x'], oy: G.layout[k + 'y'] };
     pvBoxEl.classList.add('dragging');
   });
   pvBoxEl.addEventListener('pointermove', e => {
     if (!drag) { const k = pieceAt(e.target); pvBoxEl.style.cursor = k ? 'grab' : ''; return; }
     const sc = pvScale();
+    if (drag.k.startsWith('p:')) {
+      const f = sc * G.layout.cs / 100, v = ce(drag.k.slice(2));        // card pieces live inside the scaled card
+      v.x = Math.round(drag.ox + (e.clientX - drag.x) / f); v.y = Math.round(drag.oy + (e.clientY - drag.y) / f);
+      saveLay(); syncPieceUI(); return;
+    }
     setLay(drag.k + 'x', drag.ox + (e.clientX - drag.x) / sc);
     setLay(drag.k + 'y', drag.oy + (e.clientY - drag.y) / sc);
-    if (drag.k === 's' && linkK) { /* setLay already moved the strike boxes by the delta */ }
     saveLay();
   });
   const endDrag = () => { if (drag) { drag = null; pvBoxEl.classList.remove('dragging'); } };
@@ -1122,9 +1145,25 @@
   pvBoxEl.addEventListener('wheel', e => {
     const k = pieceAt(e.target); if (!k) return;
     e.preventDefault();
+    if (k.startsWith('p:')) { const v = ce(k.slice(2)); v.s = Math.max(30, Math.min(250, v.s + (e.deltaY < 0 ? 4 : -4))); selPiece(k.slice(2)); saveLay(); syncPieceUI(); return; }
     const key = k + 's';
     setLay(key, Math.max(30, Math.min(140, G.layout[key] + (e.deltaY < 0 ? 2 : -2)))); saveLay();
   }, { passive: false });
+
+  // "Inside the card" panel
+  let piecesMode = false, curPiece = 'name';
+  $('pcPiece').innerHTML = PP.CARD_PIECES.map(([k, l]) => `<option value="${k}">${l}</option>`).join('');
+  function selPiece(k) { curPiece = k; $('pcPiece').value = k; syncPieceUI(); }
+  function syncPieceUI() { const v = ce(curPiece); [['pcX', 'x'], ['pcY', 'y'], ['pcS', 's']].forEach(([id, f]) => { $(id).value = v[f]; $(id + 'n').value = v[f]; }); }
+  $('pcPiece').onchange = () => selPiece($('pcPiece').value);
+  [['pcX', 'x'], ['pcY', 'y'], ['pcS', 's']].forEach(([id, f]) => {
+    $(id).oninput = () => { ce(curPiece)[f] = +$(id).value; $(id + 'n').value = $(id).value; saveLay(); };
+    $(id + 'n').onchange = () => { ce(curPiece)[f] = +$(id + 'n').value || (f === 's' ? 100 : 0); syncPieceUI(); saveLay(); };
+  });
+  $('pcMode').onchange = () => { piecesMode = $('pcMode').checked; pvBoxEl.classList.toggle('pieces', piecesMode); };
+  $('pcReset').onclick = () => { if (G.layout.ce) delete G.layout.ce[curPiece]; syncPieceUI(); saveLay(); };
+  $('pcResetAll').onclick = () => { if (!confirm('Put every piece inside the card back where it started?')) return; G.layout.ce = {}; syncPieceUI(); saveLay(); };
+  syncPieceUI();
 
   // ── render control ──────────────────────────────────────────────────────
   function renderButtons() { Object.entries(toggles).forEach(([id, k]) => $(id).classList.toggle('on', !!G.show[k])); const w = !!(G.card && G.card.rankShown === false); $('bRank').disabled = !w; $('bRank').style.opacity = w ? 1 : .45; }

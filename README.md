@@ -59,6 +59,14 @@ Open **Layout — sizes & positions** on the control page. Drag the card, scoreb
 preview to move them, scroll over one to resize it, or use the S/M/L/XL buttons and the sliders. The strike
 boxes follow the scoreboard unless you untick that box. Layout is saved in the browser and sent to OBS.
 
+**Inside the card:** Layout → *Inside the card* moves and sizes each piece of the card — player name, stat number, stat
+label, rank badge, team tags, contestant tag, Rare find, PINPOINT banner and the player photo. Pick a piece and use the
+sliders, or tick *Move pieces inside the card* and drag them on the preview (scroll to size).
+
+**Whoosh timing:** every whoosh builds up before it hits, so the app starts each one partway in so its loudest moment
+lands as the card settles / the star opens. *Timing* nudges that earlier or later for OBS's own audio delay; *Also play
+them on this page* lets you check against the preview.
+
 ## Photos
 - As soon as a list is chosen, every player's photo is found and loaded (control and OBS display both), so cards pop instantly.
 - **Check photos / step through cards** opens Photo check: every player on the list as a card. ← → to move, *Next source*
